@@ -31,9 +31,9 @@ services:
     image: mysql:8.4
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: j-reaud26
-      MYSQL_PASSWORD: Sebjyx-7didty-juxqyk
-      MYSQL_ROOT_PASSWORD: gyfgur-banzat-wufwU7
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

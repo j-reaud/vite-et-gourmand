@@ -5,7 +5,8 @@ RUN apk add --no-cache \
     unzip \
     icu-dev \
     libzip-dev \
-    linux-headers
+    linux-headers \
+    openssl-dev
 
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && docker-php-ext-install intl opcache pdo_mysql zip \
