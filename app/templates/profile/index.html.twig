@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block body %}
+    <div class="container py-5">
+        <h1>Mon profil</h1>
+
+        <p> Bienvenue {{ app.user.firstName }}.</p>
+
+        <a href="{{ path('app_logout') }}" class="btn auth-logout">Se déconnecter</a>
+    </div>
+{% endblock %}

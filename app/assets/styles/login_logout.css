@@ -1,0 +1,114 @@
+.auth-page {
+    display: grid;
+    min-height: 100vh;
+    place-items: center;
+    padding: 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+    background-color: var(--color-white);
+    border: 1px solid rgba(122, 38, 58, 0.15);
+    border-radius: 1rem;
+    box-shadow: 0 1rem 2.5rem rgba(41, 37, 34, 0.08);
+}
+
+.auth-brand {
+    margin-bottom: 2rem;
+    color: var(--color-primary);
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.auth-heading {
+    margin-bottom: 1.5rem;
+}
+
+.auth-heading h1 {
+    margin-bottom: 0.75rem;
+    font-size: 2rem;
+}
+
+.auth-heading p {
+    margin-bottom: 0;
+    color: var(--color-muted);
+}
+
+.auth-eyebrow {
+    margin-bottom: 0.5rem !important;
+    color: var(--color-primary) !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.auth-form-wrapper{
+    width: 100%;
+    max-width: 28rem;
+}
+
+.auth-form .form-label {
+    color: var(--color-dark);
+    font-weight: 500;
+}
+
+.auth-form .form-control {
+    min-height: 3rem;
+    border-color: rgba(116, 110, 104, 0.4);
+    border-radius: 0.65rem;
+    width: 100%;
+}
+
+.auth-form .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(122, 38, 58, 0.15);
+}
+
+.auth-submit {
+    min-height: 3rem;
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    border-radius: 999px;
+    font-weight: 600;
+    width: 100%;
+}
+
+.auth-submit:hover,
+.auth-submit:focus {
+    background-color: var(--color-dark);
+    color: var(--color-white);
+}
+
+.auth-logout{
+    padding: 0.75rem 1.5rem;
+    border: 1px solid var(--color-primary);
+    border-radius: 999px;
+    color: var(--color-primary);
+    font-weight: 600; 
+}
+
+.auth-logout:hover,
+.auth-logout:focus {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+
+
+@media (min-width: 768px) {
+    .auth-page {
+        padding: 2rem;
+    }
+
+    .auth-card {
+        padding: 2.5rem;
+    }
+
+    .auth-heading h1 {
+        font-size: 2.5rem;
+    }
+}
