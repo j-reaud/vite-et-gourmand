@@ -1,3 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap');
+
+:root {
+
+    --color-primary: #7A263A;
+    --color-cream: #FFF8EE;
+    --color-dark: #292522;
+    --color-muted: #746E68;
+    --color-white: #FFFFFF;
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+}
+
 body {
-    background-color: skyblue;
+    min-height: 100vh;
+    margin:0;
+    background-color: var(--color-cream);
+    color: var(--color-dark);
+    font-family: var(--font-body);
+}
+
+h1, h2, h3 {
+    font-family: var(--font-heading);
+}
+
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+
+    color: var(--color-dark);
 }
