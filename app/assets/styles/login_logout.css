@@ -98,6 +98,18 @@
 }
 
 
+.auth-footer {
+    margin: 1.5rem 0 0;
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-footer a {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
 
 @media (min-width: 768px) {
     .auth-page {
