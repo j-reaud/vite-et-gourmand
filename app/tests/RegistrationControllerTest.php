@@ -41,12 +41,21 @@ class RegistrationControllerTest extends WebTestCase
             'registration_form[lastName]' => 'Dupont',
             'registration_form[phone]' => '0612345678',
             'registration_form[address]' => '10 rue de Bordeaux',
-            'registration_form[email]' => 'jean@example.com',
+            'registration_form[email]' => 'juan@example.com',
             'registration_form[plainPassword][first]' => 'Password1!',
             'registration_form[plainPassword][second]' => 'Password1!',
         ]);
 
         self::assertResponseRedirects('/login');
+        self::assertEmailCount(1);
+
+        $email = self::getMailerMessage();
+
+        self::assertEmailAddressContains($email, 'To', 'juan@example.com');
+        self::assertEmailSubjectContains($email, 'Bienvenue chez Vite & Gourmand');
+        self::assertEmailHtmlBodyContains($email, 'Votre compte a bien été créé.');
+        self::assertEmailHtmlBodyNotContains($email, 'Password1!');
+
         self::assertCount(1, $this->userRepository->findAll());
     }
 }
