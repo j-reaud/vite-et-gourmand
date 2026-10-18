@@ -83,7 +83,10 @@ class ResetPasswordControllerTest extends WebTestCase
         /** @var array<TemplatedEmail> $messages */
         $email = $messages[0]->getHtmlBody();
         self::assertIsString($email);
-        preg_match('#(/reset-password/reset/[a-zA-Z0-9]+)#', $email, $resetLink);
+        self::assertSame(
+            1,
+            preg_match('#(/reset-password/reset/[^"\'\s<]+)#', $email, $resetLink)
+        );
 
         $this->client->request('GET', $resetLink[1]);
 
