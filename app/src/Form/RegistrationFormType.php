@@ -36,7 +36,7 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
-                'attr' => ['automatique' => 'email'],
+                'attr' => ['autocomplete' => 'email'],
                 'constraints' => [
                     new NotBlank(message: 'Veuillez saisir votre adresse e-mail.'),
                     new Email(message: 'Veuillez saisir une adresse e-mail valide.'),
