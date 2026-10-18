@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un nouveau mot de passe{% endblock %}
+
+{% block body %}
+    <main class="auth-page">
+        <section class="auth-card">
+            <div class="auth-brand">Vite &amp; Gourmand</div>
+
+            <div class="auth-heading">
+                <p class="auth-eyebrow">Espace client</p>
+                <h1>Nouveau mot de passe</h1>
+                <p>
+                    Choisissez un nouveau mot de passe sécurisé pour votre compte.
+                </p>
+            </div>
+
+            {{ form_start(resetForm, {
+                attr: {class: 'auth-form'}
+            }) }}
+                {{ form_row(resetForm.plainPassword) }}
+
+                <button class="btn auth-submit w-100" type="submit">
+                    Enregistrer le mot de passe
+                </button>
+            {{ form_end(resetForm) }}
+        </section>
+    </main>
+{% endblock %}
