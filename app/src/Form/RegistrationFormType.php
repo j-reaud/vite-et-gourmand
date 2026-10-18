@@ -36,6 +36,7 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
+                'attr' => ['autocomplete' => 'email'],
                 'constraints' => [
                     new NotBlank(message: 'Veuillez saisir votre adresse e-mail.'),
                     new Email(message: 'Veuillez saisir une adresse e-mail valide.'),
@@ -64,7 +65,7 @@ class RegistrationFormType extends AbstractType
                         max: 4096,
                     ),
                     new Regex(
-                        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/',
+                        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s])\S+$/',
                         message: 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.',
                     ),
 

@@ -58,4 +58,27 @@ class RegistrationControllerTest extends WebTestCase
 
         self::assertCount(1, $this->userRepository->findAll());
     }
+
+    public function testRegistrationRejectsWhitespaceAsSpecialCharacter(): void
+    {
+        $this->client->request('GET', '/register');
+
+        $this->client->submitForm('Créer mon compte', [
+            'registration_form[firstName]' => 'Juan',
+            'registration_form[lastName]' => 'Rod',
+            'registration_form[phone]' => '0612345678',
+            'registration_form[address]' => '10 rue de Bordeaux',
+            'registration_form[email]' => 'whitespace@example.com',
+            'registration_form[plainPassword][first]' => 'Password1 ',
+            'registration_form[plainPassword][second]' => 'Password1 ',
+        ]);
+
+        self::assertSelectorTextContains(
+             '.invalid-feedback',
+            'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.'
+        );
+
+        // check the DB contains no users at that point in the test.
+        self::assertCount(0, $this->userRepository->findAll());
+    }
 }
