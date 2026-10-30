@@ -1,5 +1,13 @@
+// This file is what wires up Stimulus (the JS framework) for the whole app.
+// Symfony UX auto-generates most of this normally; manually-added
+// controllers like ProfileEditorController need to be registered here by
+// hand so Stimulus knows about them.
 import { startStimulusApp } from '@symfony/stimulus-bundle';
+import ProfileEditorController from './controllers/profile_editor_controller.js';
 
+// Boots the Stimulus application for this page.
 const app = startStimulusApp();
-// register any custom, 3rd party controllers here
-// app.register('some_controller_name', SomeImportedController);
+
+// Makes the controller available under the name "profile-editor", which is
+// what you reference in HTML via data-controller="profile-editor".
+app.register('profile-editor', ProfileEditorController);
