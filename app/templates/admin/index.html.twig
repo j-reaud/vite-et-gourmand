@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Espace administrateur{% endblock %}
+
+{% block body %}
+    <main class="admin-page">
+        <header class="admin-header">
+            <p class="admin-eyebrow">Administration</p>
+            <h1>Espace administrateur</h1>
+            <p>
+                Gérez les comptes et les activités de Vite &amp; Gourmand
+                depuis cet espace sécurisé.
+            </p>
+        </header>
+
+        <section class="admin-card">
+            <div>
+                <p class="admin-card-label">Compte connecté</p>
+
+                <h2>{{ app.user.email }}</h2>
+            </div>
+
+            <dl class="admin-account-details">
+                <div>
+                    <dt>Rôle</dt>
+                    <dd>Administrateur</dd>
+                </div>
+
+                <div>
+                    <dt>Statut</dt>
+                    <dd class="admin-status">Actif</dd>
+                </div>
+            </dl>
+        </section>
+
+        <div class="admin-actions">
+            <a href="{{ path('app_admin_logout') }}" class="admin-logout">
+                Se déconnecter
+            </a>
+        </div>
+    </main>
+{% endblock %}

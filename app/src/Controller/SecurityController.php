@@ -24,6 +24,26 @@ class SecurityController extends AbstractController
         ]);
     }
 
+    #[Route(path: '/admin/login', name: 'app_admin_login')]
+    public function adminLogin(
+        AuthenticationUtils $authenticationUtils
+    ): Response {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $this->redirectToRoute('app_admin');
+        }
+
+        return $this->render('security/admin_login.html.twig', [
+            'last_username' => $authenticationUtils->getLastUsername(),
+            'error' => $authenticationUtils->getLastAuthenticationError(),
+        ]);
+    }
+
+    #[Route(path: '/admin/logout', name: 'app_admin_logout')]
+    public function adminLogout(): void
+    {
+        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+
     #[Route(path: '/logout', name: 'app_logout')]
     public function logout(): void
     {

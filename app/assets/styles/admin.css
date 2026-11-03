@@ -1,0 +1,125 @@
+.admin-page {
+    min-height: 100vh;
+    padding: 3rem 1.25rem;
+    background: var(--color-cream);
+}
+
+.admin-header,
+.admin-card,
+.admin-actions {
+    width: 100%;
+    max-width: 62rem;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-eyebrow,
+.admin-card-label {
+    margin-bottom: 0.5rem;
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-header h1 {
+    margin-bottom: 1rem;
+    font-size: clamp(2.25rem, 8vw, 4rem);
+}
+
+.admin-header > p:last-child {
+    max-width: 42rem;
+    margin-bottom: 0;
+    color: var(--color-muted);
+    line-height: 1.7;
+}
+
+.admin-card {
+    padding: 1.5rem;
+    border: 1px solid rgba(122, 38, 58, 0.15);
+    border-radius: 1rem;
+    background: var(--color-white);
+    box-shadow: 0 1rem 2.5rem rgba(41, 37, 34, 0.06);
+}
+
+.admin-card h2 {
+    overflow-wrap: anywhere;
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+}
+
+.admin-account-details {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 0;
+}
+
+.admin-account-details > div {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: #f8f5f1;
+}
+
+.admin-account-details dt {
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.admin-account-details dd {
+    margin: 0.25rem 0 0;
+    font-weight: 600;
+}
+
+.admin-status {
+    color: #247547;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+
+.admin-logout {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.7rem 1.4rem;
+    border: 1px solid var(--color-primary);
+    border-radius: 999px;
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-logout:hover,
+.admin-logout:focus-visible {
+    background: var(--color-primary);
+    color: var(--color-white);
+}
+
+@media (min-width: 768px) {
+    .admin-page {
+        padding: 5rem 2rem;
+    }
+
+    .admin-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        padding: 2rem;
+    }
+
+    .admin-account-details {
+        grid-template-columns: repeat(2, minmax(8rem, 1fr));
+        margin-top: 0;
+    }
+}
