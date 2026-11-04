@@ -19,6 +19,12 @@
             </div>
         {% endfor %}
 
+        {% for message in app.flashes('warning') %}
+            <div class="admin-warning" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+
         <section class="admin-card employee-account-card">
             {{ form_start(employeeForm, {
                 attr: {class: 'employee-account-form'}

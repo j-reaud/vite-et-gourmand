@@ -76,11 +76,18 @@
     color: #185b32;
 }
 
-@media (min-width: 768px) {
-    .employee-account-card {
-        display: block;
-    }
+.admin-warning {
+    width: 100%;
+    max-width: 42rem;
+    margin: 0 auto 1.5rem;
+    padding: 1rem;
+    border: 1px solid #e4bd75;
+    border-radius: 0.75rem;
+    background: #fff6e3;
+    color: #704b0c;
+}
 
+@media (min-width: 768px) {
     .employee-account-actions {
         grid-template-columns: max-content max-content;
         align-items: center;

@@ -177,7 +177,7 @@ class EmployeeAccountControllerTest extends WebTestCase
         self::assertEmailCount(0);
         self::assertSelectorTextContains(
             '.invalid-feedback',
-            'There is already an account with this email'
+            'Un compte utilise déjà cette adresse e-mail.'
         );
         self::assertCount(2, $this->userRepository->findAll());
     }

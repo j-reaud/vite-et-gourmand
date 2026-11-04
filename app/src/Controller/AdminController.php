@@ -5,10 +5,12 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\EmployeeAccountFormType;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -32,6 +34,7 @@ final class AdminController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         MailerInterface $mailer,
+        LoggerInterface $logger,
     ): Response {
         $employee = new User();
         $form = $this->createForm(
@@ -66,7 +69,22 @@ final class AdminController extends AbstractController
                     'employee' => $employee,
                 ]);
 
-            $mailer->send($email);
+            try {
+                $mailer->send($email);
+            } catch (TransportExceptionInterface $exception) {
+                $logger->error(
+                    'Employee account notification email could not be sent.',
+                    [
+                        'employee_email' => $employee->getEmail(),
+                        'exception' => $exception,
+                    ]
+                );
+
+                $this->addFlash(
+                    'warning',
+                    'Le compte employé a été créé, mais l’e-mail de notification n’a pas pu être envoyé.'
+                );
+            }
 
             $this->addFlash(
                 'success',
