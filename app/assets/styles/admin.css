@@ -84,6 +84,8 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .admin-logout {
