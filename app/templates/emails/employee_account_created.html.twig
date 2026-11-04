@@ -1,0 +1,106 @@
+{% apply inline_css(source('@styles/emails/account.css')) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Votre compte employé Vite &amp; Gourmand</title>
+</head>
+
+<body class="email-body">
+    <table
+        role="presentation"
+        width="100%"
+        cellspacing="0"
+        cellpadding="0"
+        border="0"
+        class="email-background"
+    >
+        <tr>
+            <td align="center">
+                <table
+                    role="presentation"
+                    width="100%"
+                    cellspacing="0"
+                    cellpadding="0"
+                    border="0"
+                    class="email-shell"
+                >
+                    <tr>
+                        <td class="email-header">
+                            <span class="email-brand">
+                                Vite &amp; Gourmand
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-content">
+                            <table
+                                role="presentation"
+                                width="100%"
+                                cellspacing="0"
+                                cellpadding="0"
+                                border="0"
+                            >
+                                <tr>
+                                    <td class="email-eyebrow">
+                                        Espace employé
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-title">
+                                        Votre compte a été créé
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Bonjour,
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Un compte employé Vite &amp; Gourmand
+                                        a été créé pour l’adresse
+                                        {{ employee.email }}.
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Pour obtenir votre mot de passe,
+                                        veuillez contacter votre
+                                        administrateur.
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Pour votre sécurité, aucun mot de
+                                        passe n’est communiqué dans cet
+                                        e-mail.
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-footer">
+                            À bientôt,<br>
+                            L’équipe Vite &amp; Gourmand
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+{% endapply %}

@@ -1,0 +1,88 @@
+.employee-account-card {
+    display: block;
+    max-width: 42rem;
+}
+
+.employee-account-form {
+    width: 100%;
+}
+
+.employee-account-form label {
+    margin-bottom: 0.5rem;
+    color: var(--color-dark);
+    font-weight: 600;
+}
+
+.employee-account-form input {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid #d7cec5;
+    border-radius: 0.75rem;
+    background: var(--color-white);
+}
+
+.employee-account-form input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(122, 38, 58, 0.12);
+}
+
+.employee-account-form .invalid-feedback,
+.employee-account-form .form-error-message {
+    color: #a32332;
+}
+
+.employee-account-actions {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
+
+.admin-primary-button {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-primary);
+    color: var(--color-white);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-primary-button:hover,
+.admin-primary-button:focus-visible {
+    background: var(--color-dark);
+    color: var(--color-white);
+}
+
+.employee-account-actions a {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.admin-success {
+    width: 100%;
+    max-width: 42rem;
+    margin: 0 auto 1.5rem;
+    padding: 1rem;
+    border: 1px solid #9bc9ac;
+    border-radius: 0.75rem;
+    background: #edf8f1;
+    color: #185b32;
+}
+
+@media (min-width: 768px) {
+    .employee-account-card {
+        display: block;
+    }
+
+    .employee-account-actions {
+        grid-template-columns: max-content max-content;
+        align-items: center;
+    }
+}

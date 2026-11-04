@@ -12,3 +12,4 @@ import './styles/login_logout.css';
 import './styles/profile.css';
 import './styles/admin_login.css';
 import './styles/admin.css';
+import './styles/employee_account.css';
