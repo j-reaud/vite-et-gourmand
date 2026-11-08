@@ -193,4 +193,27 @@ class EmployeeAccountControllerTest extends WebTestCase
         );
         self::assertCount(2, $this->userRepository->findAll());
     }
+
+    public function testEmptyEmployeeFieldsReturnValidationErrors(): void
+    {
+        $this->client->loginUser($this->administrator, 'admin');
+        $this->client->request('GET', '/admin/employees/new');
+
+        $this->client->submitForm('Créer le compte employé', [
+            'employee_account_form[firstName]' => '',
+            'employee_account_form[lastName]' => '',
+            'employee_account_form[email]' => '',
+            'employee_account_form[phone]' => '',
+            'employee_account_form[employeeNumber]' => '',
+            'employee_account_form[plainPassword][first]' =>
+                'Employee1!Secure',
+            'employee_account_form[plainPassword][second]' =>
+                'Employee1!Secure',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorExists('.invalid-feedback');
+        self::assertEmailCount(0);
+        self::assertCount(1, $this->userRepository->findAll());
+    }
 }

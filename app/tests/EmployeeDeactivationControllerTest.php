@@ -4,6 +4,7 @@ namespace App\Tests;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -152,6 +153,7 @@ class EmployeeDeactivationControllerTest extends WebTestCase
 
     public function testNonAdministratorCannotDeactivateEmployee(): void
     {
+        $employeeId = $this->employee->getId();
         $customer = (new User())
             ->setEmail('customer@example.com')
             ->setRoles(['ROLE_USER'])
@@ -164,12 +166,39 @@ class EmployeeDeactivationControllerTest extends WebTestCase
         $this->client->loginUser($customer, 'admin');
         $this->client->request(
             'POST',
-            '/admin/employees/'.$this->employee->getId().'/deactivate',
+            '/admin/employees/'.$employeeId.'/deactivate',
             ['_token' => 'invalid']
         );
 
         self::assertResponseStatusCodeSame(403);
-        self::assertTrue($this->employee->isActive());
+
+        $this->entityManager->clear();
+
+        $employee = $this->userRepository->find($employeeId);
+
+        self::assertInstanceOf(User::class, $employee);
+        self::assertTrue($employee->isActive());
+    }
+
+    public function testDeactivatedEmployeeSessionIsInvalidated(): void
+    {
+        $employeeId = $this->employee->getId();
+
+        $this->client->loginUser($this->employee, 'main');
+        $this->client->request('GET', '/profile');
+
+        self::assertResponseIsSuccessful();
+
+        $connection = static::getContainer()->get(Connection::class);
+        $connection->executeStatement(
+            'UPDATE user SET is_active = 0 WHERE id = ?',
+            [$employeeId]
+        );
+
+        $this->entityManager->clear();
+        $this->client->request('GET', '/profile');
+
+        self::assertResponseRedirects('/login');
     }
 
     public function testAdministratorCanEditEmployeeInformation(): void
@@ -206,5 +235,57 @@ class EmployeeDeactivationControllerTest extends WebTestCase
         self::assertSame($originalPassword, $employee->getPassword());
         self::assertContains('ROLE_EMPLOYEE', $employee->getRoles());
         self::assertTrue($employee->isActive());
+    }
+
+    public function testDuplicateEmployeeNumberEditShowsSpecificError(): void
+    {
+        $secondEmployee = (new User())
+            ->setFirstName('Jean')
+            ->setLastName('Dupont')
+            ->setEmail('second.employee@example.com')
+            ->setPhone('0600000000')
+            ->setEmployeeNumber('EMP-002')
+            ->setRoles(['ROLE_EMPLOYEE'])
+            ->setIsActive(true)
+            ->setPassword('hashed-password');
+
+        $this->entityManager->persist($secondEmployee);
+        $this->entityManager->flush();
+
+        $secondEmployeeId = $secondEmployee->getId();
+        $formName = 'employee_edit_'.$secondEmployeeId;
+
+        $this->client->loginUser($this->administrator, 'admin');
+        $crawler = $this->client->request('GET', '/admin/employees');
+        $form = $crawler
+            ->filter('#employee-edit-modal-'.$secondEmployeeId.' form')
+            ->form([
+                $formName.'[firstName]' => 'Jean',
+                $formName.'[lastName]' => 'Dupont',
+                $formName.'[email]' => 'second.employee@example.com',
+                $formName.'[phone]' => '0600000000',
+                $formName.'[employeeNumber]' => 'EMP-001',
+            ]);
+
+        $this->client->submit($form);
+
+        self::assertResponseRedirects('/admin/employees');
+
+        $this->client->followRedirect();
+
+        self::assertSelectorTextContains(
+            '[role="alert"]',
+            'Ce numéro d’employé est déjà utilisé.'
+        );
+
+        $this->entityManager->clear();
+
+        $secondEmployee = $this->userRepository->find($secondEmployeeId);
+
+        self::assertInstanceOf(User::class, $secondEmployee);
+        self::assertSame(
+            'EMP-002',
+            $secondEmployee->getEmployeeNumber()
+        );
     }
 }

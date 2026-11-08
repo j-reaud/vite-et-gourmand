@@ -168,10 +168,19 @@ final class AdminController extends AbstractController
                 'Les informations de l’employé ont été modifiées.'
             );
         } else {
-            $this->addFlash(
-                'warning',
-                'Les modifications n’ont pas pu être enregistrées.'
-            );
+            $hasErrors = false;
+
+            foreach ($form->getErrors(true) as $error) {
+                $hasErrors = true;
+                $this->addFlash('warning', $error->getMessage());
+            }
+
+            if (!$hasErrors) {
+                $this->addFlash(
+                    'warning',
+                    'Les modifications n’ont pas pu être enregistrées.'
+                );
+            }
         }
 
         return $this->redirectToRoute('app_admin_employee_index');

@@ -25,6 +25,7 @@ class EmployeeAccountFormType extends AbstractType
         $builder
             ->add('firstName', TextType::class, [
                 'label' => 'Prénom',
+                'empty_data' => '',
                 'attr' => ['autocomplete' => 'given-name'],
                 'constraints' => [
                     new NotBlank(
@@ -35,6 +36,7 @@ class EmployeeAccountFormType extends AbstractType
             ])
             ->add('lastName', TextType::class, [
                 'label' => 'Nom',
+                'empty_data' => '',
                 'attr' => ['autocomplete' => 'family-name'],
                 'constraints' => [
                     new NotBlank(
@@ -45,6 +47,7 @@ class EmployeeAccountFormType extends AbstractType
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
+                'empty_data' => '',
                 'attr' => ['autocomplete' => 'email'],
                 'constraints' => [
                     new NotBlank(
@@ -57,6 +60,7 @@ class EmployeeAccountFormType extends AbstractType
             ])
             ->add('phone', TelType::class, [
                 'label' => 'Numéro de téléphone',
+                'empty_data' => '',
                 'attr' => ['autocomplete' => 'tel'],
                 'constraints' => [
                     new NotBlank(
@@ -67,6 +71,7 @@ class EmployeeAccountFormType extends AbstractType
             ])
             ->add('employeeNumber', TextType::class, [
                 'label' => 'Numéro d’employé',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir le numéro d’employé.'

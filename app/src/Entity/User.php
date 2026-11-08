@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -16,9 +17,12 @@ use Symfony\Component\Security\Core\User\UserInterface;
 )]
 #[UniqueEntity(
     fields: ['employeeNumber'],
-    message: 'Ce numéro d\'employé est déjà utilisé.'
+    message: 'Ce numéro d’employé est déjà utilisé.'
 )]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements
+    UserInterface,
+    PasswordAuthenticatedUserInterface,
+    EquatableInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -131,6 +135,46 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
 
         return $data;
+    }
+
+    public function isEqualTo(UserInterface $user): bool
+    {
+        if (!$user instanceof self) {
+            return false;
+        }
+
+        $currentPassword = $this->getPassword();
+        $refreshedPassword = $user->getPassword();
+
+        if (
+            $currentPassword !== $refreshedPassword
+            && (
+                null === $currentPassword
+                || 8 !== strlen($currentPassword)
+                || hash(
+                    'crc32c',
+                    $refreshedPassword ?? $currentPassword
+                ) !== $currentPassword
+            )
+        ) {
+            return false;
+        }
+
+        $currentRoles = array_map('strval', $this->getRoles());
+        $refreshedRoles = array_map('strval', $user->getRoles());
+
+        if (
+            count($currentRoles) !== count($refreshedRoles)
+            || count($currentRoles) !== count(
+                array_intersect($currentRoles, $refreshedRoles)
+            )
+        ) {
+            return false;
+        }
+
+        return $this->getUserIdentifier()
+            === $user->getUserIdentifier()
+            && $this->isActive() === $user->isActive();
     }
 
     #[\Deprecated]

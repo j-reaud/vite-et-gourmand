@@ -20,6 +20,7 @@ class EmployeeEditFormType extends AbstractType
         $builder
             ->add('firstName', TextType::class, [
                 'label' => 'Prénom',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir le prénom.'
@@ -29,6 +30,7 @@ class EmployeeEditFormType extends AbstractType
             ])
             ->add('lastName', TextType::class, [
                 'label' => 'Nom',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir le nom.'
@@ -38,6 +40,7 @@ class EmployeeEditFormType extends AbstractType
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse e-mail',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir une adresse e-mail.'
@@ -49,6 +52,7 @@ class EmployeeEditFormType extends AbstractType
             ])
             ->add('phone', TelType::class, [
                 'label' => 'Numéro de téléphone',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir le numéro de téléphone.'
@@ -58,6 +62,7 @@ class EmployeeEditFormType extends AbstractType
             ])
             ->add('employeeNumber', TextType::class, [
                 'label' => 'Numéro d’employé',
+                'empty_data' => '',
                 'constraints' => [
                     new NotBlank(
                         message: 'Veuillez saisir le numéro d’employé.'
