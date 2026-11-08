@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
@@ -19,6 +20,92 @@
         {% endif %}
     </head>
     <body>
-        {% block body %}{% endblock %}
+        <header class="site-header">
+            <nav class="home-nav navbar navbar-expand-lg" aria-label="Navigation principale">
+                <a class="home-brand" href="{{ path('app_home') }}" aria-label="Vite & Gourmand, accueil">
+                    <span class="home-brand__mark">V&amp;G</span>
+                    <span>Vite &amp; Gourmand</span>
+                </a>
+
+                <div class="home-nav__actions-mobile">
+                    <a class="button button--primary button--small" href="{{ path('app_home') }}#menus">Commander</a>
+                    <button
+                        class="home-nav__toggle navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#home-navigation"
+                        aria-controls="home-navigation"
+                        aria-expanded="false"
+                        aria-label="Ouvrir le menu"
+                    >
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+
+                <div class="collapse navbar-collapse home-nav__content" id="home-navigation">
+                    <ul class="home-nav__links navbar-nav">
+                        <li><a class="active" href="{{ path('app_home') }}">Accueil</a></li>
+                        <li><a href="{{ path('app_home') }}#menus">Nos menus</a></li>
+                        <li><a href="{{ path('app_home') }}#histoire">À propos</a></li>
+                        <li><a href="{{ path('app_home') }}#contact">Contact</a></li>
+                    </ul>
+
+                    <div class="home-nav__account">
+                        {% if app.user %}
+                            <a href="{{ path('app_profile') }}">Mon profil</a>
+                        {% else %}
+                            <a href="{{ path('app_login') }}">
+                                <img src="{{ asset('icons/home/user.svg') }}" alt="" aria-hidden="true">
+                                Se connecter
+                            </a>
+                        {% endif %}
+                        <a class="button button--primary" href="{{ path('app_home') }}#menus">Commander <span aria-hidden="true">→</span></a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        {% block body %}
+        {% endblock %}
+
+        <footer class="site-footer">
+            <div class="section-shell">
+                <div class="site-footer__grid">
+                    <div class="site-footer__brand">
+                        <a class="home-brand home-brand--footer" href="{{ path('app_home') }}"><span class="home-brand__mark">V&amp;G</span><span>Vite &amp; Gourmand</span></a>
+                        <p>Traiteur familial à Bordeaux. Cuisine maison, produits choisis et moments partagés depuis 1999.</p>
+                        <div class="social-links"><a href="#" aria-label="Instagram"><img src="{{ asset('icons/home/instagram.svg') }}" alt=""></a><a href="#" aria-label="Facebook"><img src="{{ asset('icons/home/facebook.svg') }}" alt=""></a></div>
+                    </div>
+                    <div>
+                        <h2>Découvrir</h2>
+                        <a href="{{ path('app_home') }}#menus">Nos menus</a>
+                        <a href="{{ path('app_home') }}#engagements">Nos engagements</a>
+                        <a href="{{ path('app_home') }}#histoire">Notre histoire</a>
+                        <a href="{{ path('app_home') }}#testimonials-title">Vos avis</a>
+                    </div>
+                    <div>
+                        <h2>Votre commande</h2>
+                        <a href="{{ path('app_home') }}#menus">Commander</a>
+                        <a href="mailto:bonjour@viteetgourmand.fr">Demander un devis</a>
+                        <a href="{{ path('app_login') }}">Se connecter</a>
+                    </div>
+                    <div>
+                        <h2>Nous trouver</h2>
+                        <p>18 rue des Saveurs<br>33000 Bordeaux</p>
+                        <a href="tel:+33556002525">04 56 00 25 25</a>
+                        <a href="mailto:bonjour@viteetgourmand.fr">bonjour@viteetgourmand.fr</a>
+                        <p>Lundi–Dimanche · 9h–18h</p>
+                    </div>
+                </div>
+                <div class="site-footer__legal">
+                    <span>© 2026 Vite &amp; Gourmand. Tous droits réservés.</span>
+                    <div>
+                        <a href="#">Mentions légales</a>
+                        <a href="#">Confidentialité</a>
+                        <a href="#">Conditions générales de vente</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </body>
 </html>

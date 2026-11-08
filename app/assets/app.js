@@ -14,3 +14,4 @@ import './styles/admin_login.css';
 import './styles/admin.css';
 import './styles/employee_account.css';
 import './styles/employee_list.css';
+import './styles/home.css';
