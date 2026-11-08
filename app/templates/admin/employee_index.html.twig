@@ -1,0 +1,215 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Comptes employés{% endblock %}
+
+{% block body %}
+    <main class="admin-page employee-list-page">
+        <header class="admin-header">
+            <p class="admin-eyebrow">Administration</p>
+            <h1>Comptes employés</h1>
+            <p>
+                Consultez le statut des comptes et désactivez les accès
+                des employés ayant quitté l’entreprise.
+            </p>
+        </header>
+
+        {% for message in app.flashes('success') %}
+            <div class="admin-success" role="status">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('warning') %}
+            <div class="admin-warning" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <section class="employee-list">
+            <div class="employee-list-heading">
+                <h2>Employés</h2>
+
+                <a
+                    href="{{ path('app_admin_employee_new') }}"
+                    class="admin-primary-button"
+                >
+                    Créer un compte
+                </a>
+            </div>
+
+            {% if employees is empty %}
+                <p class="employee-list-empty">
+                    Aucun compte employé n’a encore été créé.
+                </p>
+            {% else %}
+                <div class="employee-list-items">
+                    {% for employee in employees %}
+                        <article class="employee-list-item">
+                            <dl class="employee-list-details">
+                                <div>
+                                    <dt>Prénom</dt>
+                                    <dd>{{ employee.firstName }}</dd>
+                                </div>
+
+                                <div>
+                                    <dt>Nom</dt>
+                                    <dd>{{ employee.lastName }}</dd>
+                                </div>
+
+                                <div>
+                                    <dt>Adresse e-mail</dt>
+                                    <dd>{{ employee.email }}</dd>
+                                </div>
+
+                                <div>
+                                    <dt>Téléphone</dt>
+                                    <dd>{{ employee.phone }}</dd>
+                                </div>
+
+                                <div>
+                                    <dt>Numéro d’employé</dt>
+                                    <dd>{{ employee.employeeNumber }}</dd>
+                                </div>
+                            </dl>
+
+                            <div class="employee-list-status">
+                                <span
+                                    class="employee-status employee-status--{{ employee.active ? 'active' : 'inactive' }}"
+                                >
+                                    {{ employee.active ? 'Actif' : 'Inactif' }}
+                                </span>
+                            </div>
+
+                            <div class="employee-list-action">
+                                <button
+                                    type="button"
+                                    class="employee-edit-button"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#employee-edit-modal-{{ employee.id }}"
+                                >
+                                    Modifier
+                                </button>
+
+                                {% if employee.active %}
+                                    <form
+                                        method="post"
+                                        action="{{ path(
+                                            'app_admin_employee_deactivate',
+                                            {id: employee.id}
+                                        ) }}"
+                                        data-controller="confirmation"
+                                        data-action="submit->confirmation#submit"
+                                        data-confirmation-message-value="Confirmer la désactivation de ce compte ?"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="_token"
+                                            value="{{ csrf_token(
+                                                'deactivate_employee_'
+                                                ~ employee.id
+                                            ) }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="employee-deactivate-button"
+                                        >
+                                            Désactiver
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="employee-no-action">
+                                        Compte désactivé
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div
+                                class="modal fade employee-edit-modal"
+                                id="employee-edit-modal-{{ employee.id }}"
+                                tabindex="-1"
+                                aria-labelledby="employee-edit-modal-title-{{ employee.id }}"
+                                aria-hidden="true"
+                            >
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h2
+                                                class="modal-title fs-5"
+                                                id="employee-edit-modal-title-{{ employee.id }}"
+                                            >
+                                                Modifier le compte employé
+                                            </h2>
+
+                                            <button
+                                                type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"
+                                                aria-label="Fermer"
+                                            ></button>
+                                        </div>
+
+                                        {{ form_start(
+                                            employeeEditForms[employee.id],
+                                            {
+                                                attr: {
+                                                    class: 'employee-edit-form'
+                                                }
+                                            }
+                                        ) }}
+                                            <div class="modal-body">
+                                                {{ form_errors(
+                                                    employeeEditForms[employee.id]
+                                                ) }}
+                                                {{ form_row(
+                                                    employeeEditForms[employee.id].firstName
+                                                ) }}
+                                                {{ form_row(
+                                                    employeeEditForms[employee.id].lastName
+                                                ) }}
+                                                {{ form_row(
+                                                    employeeEditForms[employee.id].email
+                                                ) }}
+                                                {{ form_row(
+                                                    employeeEditForms[employee.id].phone
+                                                ) }}
+                                                {{ form_row(
+                                                    employeeEditForms[employee.id].employeeNumber
+                                                ) }}
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button
+                                                    type="button"
+                                                    class="admin-logout"
+                                                    data-bs-dismiss="modal"
+                                                >
+                                                    Annuler
+                                                </button>
+
+                                                <button
+                                                    type="submit"
+                                                    class="admin-primary-button"
+                                                >
+                                                    Enregistrer
+                                                </button>
+                                            </div>
+                                        {{ form_end(
+                                            employeeEditForms[employee.id]
+                                        ) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+
+        <div class="admin-actions">
+            <a href="{{ path('app_admin') }}" class="admin-logout">
+                Retour à l’administration
+            </a>
+        </div>
+    </main>
+{% endblock %}

@@ -56,8 +56,12 @@ class EmployeeAccountControllerTest extends WebTestCase
         self::assertResponseIsSuccessful();
 
         $this->client->submitForm('Créer le compte employé', [
+            'employee_account_form[firstName]' => 'Marie',
+            'employee_account_form[lastName]' => 'Martin',
             'employee_account_form[email]' =>
                 'employee@example.com',
+            'employee_account_form[phone]' => '0612345678',
+            'employee_account_form[employeeNumber]' => 'EMP-001',
             'employee_account_form[plainPassword][first]' =>
                 $plainPassword,
             'employee_account_form[plainPassword][second]' =>
@@ -94,6 +98,10 @@ class EmployeeAccountControllerTest extends WebTestCase
         ]);
 
         self::assertInstanceOf(User::class, $employee);
+        self::assertSame('Marie', $employee->getFirstName());
+        self::assertSame('Martin', $employee->getLastName());
+        self::assertSame('0612345678', $employee->getPhone());
+        self::assertSame('EMP-001', $employee->getEmployeeNumber());
         self::assertContains('ROLE_EMPLOYEE', $employee->getRoles());
         self::assertNotContains('ROLE_ADMIN', $employee->getRoles());
         self::assertTrue($employee->isActive());
@@ -165,8 +173,12 @@ class EmployeeAccountControllerTest extends WebTestCase
         $this->client->request('GET', '/admin/employees/new');
 
         $this->client->submitForm('Créer le compte employé', [
+            'employee_account_form[firstName]' => 'Marie',
+            'employee_account_form[lastName]' => 'Martin',
             'employee_account_form[email]' =>
                 'employee@example.com',
+            'employee_account_form[phone]' => '0612345678',
+            'employee_account_form[employeeNumber]' => 'EMP-002',
             'employee_account_form[plainPassword][first]' =>
                 'Employee1!Secure',
             'employee_account_form[plainPassword][second]' =>

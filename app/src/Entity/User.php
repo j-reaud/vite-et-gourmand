@@ -14,6 +14,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
     fields: ['email'],
     message: 'Un compte utilise déjà cette adresse e-mail.'
 )]
+#[UniqueEntity(
+    fields: ['employeeNumber'],
+    message: 'Ce numéro d\'employé est déjà utilisé.'
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -44,6 +48,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $phone = null;
+
+    #[ORM\Column(length: 50, unique: true, nullable: true)]
+    private ?string $employeeNumber = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $address = null;
@@ -122,7 +129,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
-        
+
         return $data;
     }
 
@@ -164,6 +171,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPhone(string $phone): static
     {
         $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getEmployeeNumber(): ?string
+    {
+        return $this->employeeNumber;
+    }
+
+    public function setEmployeeNumber(?string $employeeNumber): static
+    {
+        $this->employeeNumber = $employeeNumber;
 
         return $this;
     }

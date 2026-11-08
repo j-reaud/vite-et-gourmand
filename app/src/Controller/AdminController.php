@@ -4,10 +4,13 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\EmployeeAccountFormType;
+use App\Form\EmployeeEditFormType;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -97,5 +100,122 @@ final class AdminController extends AbstractController
         return $this->render('admin/employee_new.html.twig', [
             'employeeForm' => $form,
         ]);
+    }
+
+    #[Route(
+        '/admin/employees',
+        name: 'app_admin_employee_index',
+        methods: ['GET'],
+    )]
+    public function employees(
+        UserRepository $userRepository,
+        FormFactoryInterface $formFactory,
+    ): Response {
+        $employees = $userRepository->findEmployees();
+        $employeeEditForms = [];
+
+        foreach ($employees as $employee) {
+            $employeeEditForms[$employee->getId()] = $formFactory->createNamed(
+                'employee_edit_'.$employee->getId(),
+                EmployeeEditFormType::class,
+                $employee,
+                [
+                    'action' => $this->generateUrl(
+                        'app_admin_employee_edit',
+                        ['id' => $employee->getId()]
+                    ),
+                    'method' => 'POST',
+                ]
+            )->createView();
+        }
+
+        return $this->render('admin/employee_index.html.twig', [
+            'employees' => $employees,
+            'employeeEditForms' => $employeeEditForms,
+        ]);
+    }
+
+    #[Route(
+        '/admin/employees/{id}/edit',
+        name: 'app_admin_employee_edit',
+        requirements: ['id' => '\d+'],
+        methods: ['POST'],
+    )]
+    public function editEmployee(
+        User $employee,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        FormFactoryInterface $formFactory,
+    ): Response {
+        if (!in_array('ROLE_EMPLOYEE', $employee->getRoles(), true)) {
+            throw $this->createNotFoundException(
+                'Employee account not found.'
+            );
+        }
+
+        $form = $formFactory->createNamed(
+            'employee_edit_'.$employee->getId(),
+            EmployeeEditFormType::class,
+            $employee
+        );
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                'Les informations de l’employé ont été modifiées.'
+            );
+        } else {
+            $this->addFlash(
+                'warning',
+                'Les modifications n’ont pas pu être enregistrées.'
+            );
+        }
+
+        return $this->redirectToRoute('app_admin_employee_index');
+    }
+
+    #[Route(
+        '/admin/employees/{id}/deactivate',
+        name: 'app_admin_employee_deactivate',
+        requirements: ['id' => '\d+'],
+        methods: ['POST'],
+    )]
+    public function deactivateEmployee(
+        User $employee,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!in_array('ROLE_EMPLOYEE', $employee->getRoles(), true)) {
+            throw $this->createNotFoundException(
+                'Employee account not found.'
+            );
+        }
+
+        if (!$this->isCsrfTokenValid(
+            'deactivate_employee_'.$employee->getId(),
+            $request->request->getString('_token')
+        )) {
+            throw $this->createAccessDeniedException(
+                'Invalid CSRF token.'
+            );
+        }
+
+        if ($employee->isActive()) {
+            $employee->setIsActive(false);
+            $entityManager->flush();
+
+            $this->addFlash(
+                'success',
+                sprintf(
+                    'Le compte employé %s a été désactivé.',
+                    $employee->getEmail()
+                )
+            );
+        }
+
+        return $this->redirectToRoute('app_admin_employee_index');
     }
 }
