@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -14,7 +15,14 @@ use Symfony\Component\Security\Core\User\UserInterface;
     fields: ['email'],
     message: 'Un compte utilise déjà cette adresse e-mail.'
 )]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+#[UniqueEntity(
+    fields: ['employeeNumber'],
+    message: 'Ce numéro d’employé est déjà utilisé.'
+)]
+class User implements
+    UserInterface,
+    PasswordAuthenticatedUserInterface,
+    EquatableInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -44,6 +52,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $phone = null;
+
+    #[ORM\Column(length: 50, unique: true, nullable: true)]
+    private ?string $employeeNumber = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $address = null;
@@ -122,8 +133,48 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
-        
+
         return $data;
+    }
+
+    public function isEqualTo(UserInterface $user): bool
+    {
+        if (!$user instanceof self) {
+            return false;
+        }
+
+        $currentPassword = $this->getPassword();
+        $refreshedPassword = $user->getPassword();
+
+        if (
+            $currentPassword !== $refreshedPassword
+            && (
+                null === $currentPassword
+                || 8 !== strlen($currentPassword)
+                || hash(
+                    'crc32c',
+                    $refreshedPassword ?? $currentPassword
+                ) !== $currentPassword
+            )
+        ) {
+            return false;
+        }
+
+        $currentRoles = array_map('strval', $this->getRoles());
+        $refreshedRoles = array_map('strval', $user->getRoles());
+
+        if (
+            count($currentRoles) !== count($refreshedRoles)
+            || count($currentRoles) !== count(
+                array_intersect($currentRoles, $refreshedRoles)
+            )
+        ) {
+            return false;
+        }
+
+        return $this->getUserIdentifier()
+            === $user->getUserIdentifier()
+            && $this->isActive() === $user->isActive();
     }
 
     #[\Deprecated]
@@ -164,6 +215,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPhone(string $phone): static
     {
         $this->phone = $phone;
+
+        return $this;
+    }
+
+    public function getEmployeeNumber(): ?string
+    {
+        return $this->employeeNumber;
+    }
+
+    public function setEmployeeNumber(?string $employeeNumber): static
+    {
+        $this->employeeNumber = $employeeNumber;
 
         return $this;
     }

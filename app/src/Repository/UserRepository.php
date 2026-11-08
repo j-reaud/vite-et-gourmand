@@ -20,6 +20,38 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * @return User[]
+     */
+    public function findEmployees(): array
+    {
+        $employeeIds = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(
+                'SELECT id FROM user
+                WHERE JSON_CONTAINS(roles, :employeeRole) = 1',
+                [
+                    'employeeRole' => json_encode(
+                        'ROLE_EMPLOYEE',
+                        JSON_THROW_ON_ERROR
+                    ),
+                ]
+            )
+            ->fetchFirstColumn();
+
+        if ([] === $employeeIds) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('user')
+            ->andWhere('user.id IN (:employeeIds)')
+            ->setParameter('employeeIds', $employeeIds)
+            ->orderBy('user.email', 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
