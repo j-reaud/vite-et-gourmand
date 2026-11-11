@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+    {% set currentRoute = app.request.attributes.get('_route') %}
     <header class="site-header">
         <nav class="home-nav navbar navbar-expand-lg" aria-label="Navigation principale">
             <a class="home-brand" href="{{ path('app_home') }}" aria-label="Vite & Gourmand, accueil">
@@ -9,7 +10,7 @@
             </a>
 
             <div class="home-nav__actions-mobile">
-                <a class="button button--primary button--small" href="{{ path('app_home') }}#menus">Commander</a>
+                <a class="button button--primary button--small" href="{{ path('app_menu') }}">Commander</a>
                 <button
                     class="home-nav__toggle navbar-toggler"
                     type="button"
@@ -25,8 +26,8 @@
 
             <div class="collapse navbar-collapse home-nav__content" id="home-navigation">
                 <ul class="home-nav__links navbar-nav">
-                    <li><a class="active" href="{{ path('app_home') }}">Accueil</a></li>
-                    <li><a href="{{ path('app_home') }}#menus">Nos menus</a></li>
+                    <li><a{% if currentRoute == 'app_home' %} class="active"{% endif %} href="{{ path('app_home') }}">Accueil</a></li>
+                    <li><a{% if currentRoute starts with 'app_menu' %} class="active"{% endif %} href="{{ path('app_menu') }}">Nos menus</a></li>
                     <li><a href="{{ path('app_home') }}#histoire">À propos</a></li>
                     <li><a href="{{ path('app_home') }}#contact">Contact</a></li>
                 </ul>
@@ -40,7 +41,7 @@
                             Se connecter
                         </a>
                     {% endif %}
-                    <a class="button button--primary" href="{{ path('app_home') }}#menus">Commander <span aria-hidden="true">→</span></a>
+                    <a class="button button--primary" href="{{ path('app_menu') }}">Commander <span aria-hidden="true">→</span></a>
                 </div>
             </div>
         </nav>
@@ -58,14 +59,14 @@
                 </div>
                 <div>
                     <h2>Découvrir</h2>
-                    <a href="{{ path('app_home') }}#menus">Nos menus</a>
+                    <a href="{{ path('app_menu') }}">Nos menus</a>
                     <a href="{{ path('app_home') }}#engagements">Nos engagements</a>
                     <a href="{{ path('app_home') }}#histoire">Notre histoire</a>
                     <a href="{{ path('app_home') }}#testimonials-title">Vos avis</a>
                 </div>
                 <div>
                     <h2>Votre commande</h2>
-                    <a href="{{ path('app_home') }}#menus">Commander</a>
+                    <a href="{{ path('app_menu') }}">Commander</a>
                     <a href="mailto:bonjour@viteetgourmand.fr">Demander un devis</a>
                     <a href="{{ path('app_login') }}">Se connecter</a>
                 </div>

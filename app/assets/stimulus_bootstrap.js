@@ -3,10 +3,13 @@
 // controllers like ProfileEditorController need to be registered here by
 // hand so Stimulus knows about them.
 import { startStimulusApp } from '@symfony/stimulus-bundle';
+import CatalogueFiltersController from './controllers/catalogue_filters_controller.js';
 import ProfileEditorController from './controllers/profile_editor_controller.js';
 
 // Boots the Stimulus application for this page.
 const app = startStimulusApp();
+
+app.register('catalogue-filters', CatalogueFiltersController);
 
 // Makes the controller available under the name "profile-editor", which is
 // what you reference in HTML via data-controller="profile-editor".
