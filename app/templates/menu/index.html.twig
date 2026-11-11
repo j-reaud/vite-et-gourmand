@@ -11,7 +11,11 @@
         + (filters.people is not null ? 1 : 0)
     %}
 
-    <main class="menu-catalogue" data-controller="catalogue-filters">
+    <main
+        class="menu-catalogue"
+        data-controller="catalogue-filters"
+        data-action="turbo:frame-render->catalogue-filters#syncResults"
+    >
         <section class="catalogue-shell catalogue-intro" aria-labelledby="catalogue-title">
             <p class="catalogue-eyebrow">La carte du moment</p>
             <h1 id="catalogue-title">Des menus inspirés par la saison</h1>
@@ -20,7 +24,7 @@
                 des saisons. Filtrez la carte pour trouver le menu adapté à votre événement.
             </p>
             <div class="catalogue-summary" aria-live="polite">
-                <span>{{ menus|length }} menu{{ menus|length > 1 ? 's' : '' }} disponible{{ menus|length > 1 ? 's' : '' }}</span>
+                <span data-catalogue-filters-target="summary">{{ menus|length }} menu{{ menus|length > 1 ? 's' : '' }} disponible{{ menus|length > 1 ? 's' : '' }}</span>
                 <span class="catalogue-summary__live">Mise à jour instantanée</span>
             </div>
         </section>
@@ -35,7 +39,7 @@
                 aria-expanded="false"
             >
                 <span>Filtrer les menus</span>
-                <small>{{ activeFilterCount }} actif{{ activeFilterCount > 1 ? 's' : '' }} <span aria-hidden="true">→</span></small>
+                <small><span data-catalogue-filters-target="counter">{{ activeFilterCount }} actif{{ activeFilterCount > 1 ? 's' : '' }}</span> <span aria-hidden="true">→</span></small>
             </button>
 
             <p class="catalogue-filters__mobile-hint">Prix · Thème · Régime · Nombre de personnes</p>
@@ -46,7 +50,7 @@
                 method="get"
                 action="{{ path('app_menu') }}"
                 data-catalogue-filters-target="form panel"
-                data-turbo-action="advance"
+                data-turbo-frame="menu-results"
             >
                 <div class="catalogue-filters__heading">
                     <div>
@@ -106,7 +110,7 @@
 
                 <div class="catalogue-active-filters">
                     <strong>Filtres actifs</strong>
-                    <div>
+                    <div data-catalogue-filters-target="active">
                         {% if filters.minPrice is not null or filters.maxPrice is not null %}<span>{{ filters.minPrice ?? 0 }}–{{ filters.maxPrice ?? '∞' }} €</span>{% endif %}
                         {% if filters.theme is not null %}<span>{{ filters.theme }}</span>{% endif %}
                         {% if filters.diet is not null %}<span>{{ filters.diet }}</span>{% endif %}
@@ -118,61 +122,63 @@
             </form>
         </section>
 
-        <section class="catalogue-shell catalogue-results" aria-labelledby="results-title">
-            <div class="catalogue-results__heading">
-                <h2 id="results-title">{{ menus|length }} menu{{ menus|length > 1 ? 's' : '' }} corresponde{{ menus|length > 1 ? 'nt' : '' }} à vos critères</h2>
-                <label class="catalogue-sort">
-                    <span class="visually-hidden">Trier les menus</span>
-                    <select name="sort" form="catalogue-filter-form" data-action="change->catalogue-filters#submit">
-                        <option value="recommended"{{ filters.sort == 'recommended' ? ' selected' : '' }}>Trier par : Recommandés</option>
-                        <option value="price_asc"{{ filters.sort == 'price_asc' ? ' selected' : '' }}>Prix croissant</option>
-                        <option value="price_desc"{{ filters.sort == 'price_desc' ? ' selected' : '' }}>Prix décroissant</option>
-                    </select>
-                </label>
-            </div>
+        <turbo-frame id="menu-results" class="catalogue-results-frame">
+            <section class="catalogue-shell catalogue-results" aria-labelledby="results-title">
+                <div class="catalogue-results__heading">
+                    <h2 id="results-title">{{ menus|length }} menu{{ menus|length > 1 ? 's' : '' }} corresponde{{ menus|length > 1 ? 'nt' : '' }} à vos critères</h2>
+                    <label class="catalogue-sort">
+                        <span class="visually-hidden">Trier les menus</span>
+                        <select name="sort" form="catalogue-filter-form" data-action="change->catalogue-filters#submit">
+                            <option value="recommended"{{ filters.sort == 'recommended' ? ' selected' : '' }}>Trier par : Recommandés</option>
+                            <option value="price_asc"{{ filters.sort == 'price_asc' ? ' selected' : '' }}>Prix croissant</option>
+                            <option value="price_desc"{{ filters.sort == 'price_desc' ? ' selected' : '' }}>Prix décroissant</option>
+                        </select>
+                    </label>
+                </div>
 
-            {% if menus is not empty %}
-                <div class="catalogue-grid">
-                    {% for menu in menus %}
-                        <article class="catalogue-card">
-                            <img class="catalogue-card__image" src="{{ asset(menu.imagePath) }}" width="1200" height="896" loading="lazy" decoding="async" alt="{{ menu.title }}">
-                            <div class="catalogue-card__content">
-                                <div class="catalogue-card__badges"><span>{{ menu.theme }}</span><span>{{ menu.diet }}</span></div>
-                                <div class="catalogue-card__title">
-                                    <h3>{{ menu.title }}</h3>
-                                    <strong>{{ menu.price|number_format(0, ',', ' ') }} € · {{ menu.minimumPeople }} pers.</strong>
-                                </div>
-                                <p>{{ menu.description }}</p>
-                                <dl>
-                                    <div><dt>Minimum</dt><dd>{{ menu.minimumPeople }} personnes</dd></div>
-                                    <div>
-                                        <dt>Disponibilité</dt>
-                                        {% if menu.stock == 0 %}
-                                            <dd class="catalogue-stock catalogue-stock--empty">Complet</dd>
-                                        {% elseif menu.stock <= 2 %}
-                                            <dd class="catalogue-stock catalogue-stock--low">Plus que {{ menu.stock }}</dd>
-                                        {% else %}
-                                            <dd class="catalogue-stock">Disponible · {{ menu.stock }}</dd>
-                                        {% endif %}
+                {% if menus is not empty %}
+                    <div class="catalogue-grid">
+                        {% for menu in menus %}
+                            <article class="catalogue-card">
+                                <img class="catalogue-card__image" src="{{ asset(menu.imagePath) }}" width="1200" height="896" loading="lazy" decoding="async" alt="{{ menu.title }}">
+                                <div class="catalogue-card__content">
+                                    <div class="catalogue-card__badges"><span>{{ menu.theme }}</span><span>{{ menu.diet }}</span></div>
+                                    <div class="catalogue-card__title">
+                                        <h3>{{ menu.title }}</h3>
+                                        <strong>{{ menu.price|number_format(0, ',', ' ') }} € · {{ menu.minimumPeople }} pers.</strong>
                                     </div>
-                                </dl>
-                                {% if menu.stock > 0 %}
-                                    <a class="catalogue-card__button" href="{{ path('app_menu_show', {slug: menu.slug}) }}">Voir le menu <span aria-hidden="true">→</span></a>
-                                {% else %}
-                                    <span class="catalogue-card__button catalogue-card__button--disabled">Indisponible</span>
-                                {% endif %}
-                            </div>
-                        </article>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="catalogue-empty">
-                    <h3>Aucun menu ne correspond à ces critères.</h3>
-                    <p>Modifiez vos filtres ou réinitialisez la recherche pour découvrir les autres menus.</p>
-                    <a href="{{ path('app_menu') }}">Réinitialiser les filtres</a>
-                </div>
-            {% endif %}
-        </section>
+                                    <p>{{ menu.description }}</p>
+                                    <dl>
+                                        <div><dt>Minimum</dt><dd>{{ menu.minimumPeople }} personnes</dd></div>
+                                        <div>
+                                            <dt>Disponibilité</dt>
+                                            {% if menu.stock == 0 %}
+                                                <dd class="catalogue-stock catalogue-stock--empty">Complet</dd>
+                                            {% elseif menu.stock <= 2 %}
+                                                <dd class="catalogue-stock catalogue-stock--low">Plus que {{ menu.stock }}</dd>
+                                            {% else %}
+                                                <dd class="catalogue-stock">Disponible · {{ menu.stock }}</dd>
+                                            {% endif %}
+                                        </div>
+                                    </dl>
+                                    {% if menu.stock > 0 %}
+                                        <a class="catalogue-card__button" href="{{ path('app_menu_show', {slug: menu.slug}) }}" data-turbo-frame="_top">Voir le menu <span aria-hidden="true">→</span></a>
+                                    {% else %}
+                                        <span class="catalogue-card__button catalogue-card__button--disabled">Indisponible</span>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="catalogue-empty">
+                        <h3>Aucun menu ne correspond à ces critères.</h3>
+                        <p>Modifiez vos filtres ou réinitialisez la recherche pour découvrir les autres menus.</p>
+                        <a href="{{ path('app_menu') }}" data-turbo-frame="_top">Réinitialiser les filtres</a>
+                    </div>
+                {% endif %}
+            </section>
+        </turbo-frame>
 
         <section class="catalogue-help">
             <div class="catalogue-shell">

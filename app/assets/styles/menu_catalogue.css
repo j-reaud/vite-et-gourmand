@@ -225,6 +225,10 @@
     padding-block: 32px 64px;
 }
 
+.catalogue-results-frame {
+    display: block;
+}
+
 .catalogue-results__heading {
     display: grid;
     gap: 14px;
