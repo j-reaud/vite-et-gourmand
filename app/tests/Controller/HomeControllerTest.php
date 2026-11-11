@@ -19,7 +19,7 @@ final class HomeControllerTest extends WebTestCase
         self::assertSelectorTextContains('h1', 'Des moments gourmands');
         self::assertSelectorExists('.home-hero__visual > img[src$="hero.webp"][width][height][fetchpriority="high"]');
         self::assertSelectorExists('.menu-preview-card img[loading="lazy"][width][height]');
-        self::assertSelectorExists('.home-hero a[href="#menus"]');
+        self::assertSelectorExists('.home-hero a[href="/menus"]');
         self::assertSelectorExists('.home-hero a[href="#contact"]');
         self::assertSelectorExists('#menus');
         self::assertSelectorExists('#histoire');

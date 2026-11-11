@@ -13,7 +13,7 @@
                     les célébrations et les événements particuliers.
                 </p>
                 <div class="button-group">
-                    <a class="button button--primary" href="#menus">Découvrir nos menus <span aria-hidden="true">→</span></a>
+                    <a class="button button--primary" href="{{ path('app_menu') }}">Découvrir nos menus <span aria-hidden="true">→</span></a>
                     <a class="button button--outline" href="#contact">Nous contacter</a>
                 </div>
                 <p class="home-hero__trust">
@@ -38,14 +38,14 @@
                         <h2 id="menus-title">Des menus inspirés par la saison</h2>
                         <p>Des recettes généreuses, cuisinées dans notre atelier bordelais et pensées pour se partager.</p>
                     </div>
-                    <a class="button button--outline section-heading__action" href="#menus">Voir tous les menus</a>
+                    <a class="button button--outline section-heading__action" href="{{ path('app_menu') }}">Voir tous les menus</a>
                 </div>
 
                 <div class="menu-preview-grid">
                     {% set menus = [
-                        { image: 'menu-spring.webp', badge: 'Nouveau', title: 'Déjeuner de printemps', price: 'Dès 24 €/pers.', description: 'Asperges rôties, volaille fermière aux herbes et tarte fine aux fraises.' },
-                        { image: 'menu-bordeaux.webp', badge: 'Le favori', title: 'Table bordelaise', price: 'Dès 32 €/pers.', description: 'Gravlax de truite, canard confit revisité et canelé au chocolat noir.' },
-                        { image: 'menu-vegetarian.webp', badge: 'Végétal', title: 'Jardin gourmand', price: 'Dès 22 €/pers.', description: 'Légumes rôtis, céréales parfumées, herbes fraîches et dessert fruité.' }
+                        { image: 'menu-spring.webp', badge: 'Nouveau', slug: 'dejeuner-de-printemps', title: 'Déjeuner de printemps', price: 'Dès 24 €/pers.', description: 'Asperges rôties, volaille fermière aux herbes et tarte fine aux fraises.' },
+                        { image: 'menu-bordeaux.webp', badge: 'Le favori', slug: 'table-bordelaise', title: 'Table bordelaise', price: 'Dès 32 €/pers.', description: 'Gravlax de truite, canard confit revisité et canelé au chocolat noir.' },
+                        { image: 'menu-vegetarian.webp', badge: 'Végétal', slug: 'jardin-gourmand', title: 'Jardin gourmand', price: 'Dès 22 €/pers.', description: 'Légumes rôtis, céréales parfumées, herbes fraîches et dessert fruité.' }
                     ] %}
                     {% for menu in menus %}
                         <article class="menu-preview-card">
@@ -59,13 +59,13 @@
                                     <strong>{{ menu.price }}</strong>
                                 </div>
                                 <p>{{ menu.description }}</p>
-                                <a href="#menus">Voir le menu <span aria-hidden="true">→</span></a>
+                                <a href="{{ path('app_menu_show', {slug: menu.slug}) }}">Voir le menu <span aria-hidden="true">→</span></a>
                             </div>
                         </article>
                     {% endfor %}
                 </div>
 
-                <a class="button button--outline home-mobile-only" href="#menus">Voir tous les menus</a>
+                <a class="button button--outline home-mobile-only" href="{{ path('app_menu') }}">Voir tous les menus</a>
             </div>
         </section>
 
