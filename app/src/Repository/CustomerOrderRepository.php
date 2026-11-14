@@ -33,20 +33,20 @@ class CustomerOrderRepository extends ServiceEntityRepository
         $search = trim((string) $search);
 
         if ($search !== '') {
-            $queryBuilder
-                ->andWhere(
-                    $queryBuilder->expr()->orX(
-                        'LOWER(customerOrder.menuName) LIKE :search',
-                        'customerOrder.id = :orderId',
-                    )
-                )
-                ->setParameter('search', '%' . mb_strtolower($search) . '%')
-                ->setParameter(
-                    'orderId',
-                    preg_match('/(\d+)$/', $search, $matches)
-                        ? (int) $matches[1]
-                        : 0,
+            $searchCondition = 'LOWER(customerOrder.menuName) LIKE :search';
+
+            if (preg_match('/^(?:CMD-)?0*(\d+)$/i', $search, $matches) === 1) {
+                $searchCondition = $queryBuilder->expr()->orX(
+                    $searchCondition,
+                    'customerOrder.id = :orderId',
                 );
+
+                $queryBuilder->setParameter('orderId', (int) $matches[1]);
+            }
+
+            $queryBuilder
+                ->andWhere($searchCondition)
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
         }
 
         if (

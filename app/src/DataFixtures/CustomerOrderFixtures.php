@@ -6,14 +6,22 @@ use App\Entity\CustomerOrder;
 use App\Entity\Menu;
 use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-final class CustomerOrderFixtures extends Fixture
+final class CustomerOrderFixtures extends Fixture implements DependentFixtureInterface
 {
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            MenuFixtures::class,
+        ];
     }
 
     public function load(ObjectManager $manager): void

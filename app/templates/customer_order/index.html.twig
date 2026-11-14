@@ -146,7 +146,7 @@
                     <table class="order-table">
                         <thead>
                             <tr>
-                                <th scope="col">Menu</th>
+                                <th scope="col">Image</th>
                                 <th scope="col">Commande</th>
                                 <th scope="col">Menu</th>
                                 <th scope="col">Convives</th>
@@ -169,8 +169,8 @@
                                     </td>
                                     <td>
                                         <strong>{{ order.reference }}</strong>
-                                        <time datetime="{{ order.deliveryAt|date('c') }}">
-                                            {{ order.deliveryAt|date('d/m/Y') }}
+                                        <time datetime="{{ order.orderedAt|date('c') }}">
+                                            {{ order.orderedAt|date('d/m/Y') }}
                                         </time>
                                     </td>
                                     <td>{{ order.menuName }}</td>

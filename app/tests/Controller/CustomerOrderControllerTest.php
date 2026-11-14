@@ -106,6 +106,20 @@ final class CustomerOrderControllerTest extends WebTestCase
         $this->entityManager->flush();
     }
 
+    protected function tearDown(): void
+    {
+        $orderRepository = $this->entityManager
+            ->getRepository(CustomerOrder::class);
+
+        foreach ($orderRepository->findAll() as $order) {
+            $this->entityManager->remove($order);
+        }
+
+        $this->entityManager->flush();
+
+        parent::tearDown();
+    }
+
     public function testAuthenticationIsRequired(): void
     {
         $this->client->request('GET', '/profile/orders');
@@ -265,6 +279,23 @@ final class CustomerOrderControllerTest extends WebTestCase
         self::assertSelectorTextContains(
             '.order-table',
             'Menu récent'
+        );
+
+        $crawler = $this->client->request(
+            'GET',
+            '/profile/orders?search='.urlencode(
+                'Menu '.$this->recentOrder->getId()
+            )
+        );
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(
+            0,
+            $crawler->filter('.order-table tbody tr')
+        );
+        self::assertSelectorTextContains(
+            '.orders-empty',
+            'Aucune commande ne correspond à ces filtres'
         );
     }
 
