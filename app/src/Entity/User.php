@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\EquatableInterface;
@@ -61,6 +63,17 @@ class User implements
 
     #[ORM\Column]
     private ?bool $isActive = true;
+
+    /**
+     * @var Collection<int, CustomerOrder>
+     */
+    #[ORM\OneToMany(targetEntity: CustomerOrder::class, mappedBy: 'customer')]
+    private Collection $customerOrders;
+
+    public function __construct()
+    {
+        $this->customerOrders = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -251,6 +264,36 @@ class User implements
     public function setIsActive(bool $isActive): static
     {
         $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CustomerOrder>
+     */
+    public function getCustomerOrders(): Collection
+    {
+        return $this->customerOrders;
+    }
+
+    public function addCustomerOrder(CustomerOrder $customerOrder): static
+    {
+        if (!$this->customerOrders->contains($customerOrder)) {
+            $this->customerOrders->add($customerOrder);
+            $customerOrder->setCustomer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCustomerOrder(CustomerOrder $customerOrder): static
+    {
+        if ($this->customerOrders->removeElement($customerOrder)) {
+            // set the owning side to null (unless already changed)
+            if ($customerOrder->getCustomer() === $this) {
+                $customerOrder->setCustomer(null);
+            }
+        }
 
         return $this;
     }

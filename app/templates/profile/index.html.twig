@@ -20,23 +20,7 @@
             </header>
 
             <div class="profile-content">
-                <aside class="profile-sidebar" aria-label="Navigation du compte">
-                    <div class="profile-identity">
-                        <div class="profile-avatar" aria-hidden="true">
-                            {{ app.user.firstName|first|upper }}{{ app.user.lastName|first|upper }}
-                        </div>
-                        <div>
-                            <strong>{{ app.user.firstName }} {{ app.user.lastName }}</strong>
-                            <span>{{ app.user.email }}</span>
-                        </div>
-                    </div>
-
-                    <nav class="profile-menu">
-                        <a href="{{ path('app_profile') }}" class="is-active" aria-current="page">Mon profil</a>
-                        <a href="{{ path('app_forgot_password_request') }}">Sécurité du compte</a>
-                        <a href="{{ path('app_logout') }}">Se déconnecter</a>
-                    </nav>
-                </aside>
+                {{ include('profile/_sidebar.html.twig', {activeSection: 'profile'}) }}
 
                 <section class="profile-main">
                     <header class="profile-section-heading">
