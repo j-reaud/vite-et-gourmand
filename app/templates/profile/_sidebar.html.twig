@@ -1,0 +1,32 @@
+{% set activeSection = activeSection|default('profile') %}
+
+<aside class="profile-sidebar" aria-label="Navigation du compte">
+    <div class="profile-identity">
+        <div class="profile-avatar" aria-hidden="true">
+            {{ app.user.firstName|first|upper }}{{ app.user.lastName|first|upper }}
+        </div>
+        <div>
+            <strong>{{ app.user.firstName }} {{ app.user.lastName }}</strong>
+            <span>{{ app.user.email }}</span>
+        </div>
+    </div>
+
+    <nav class="profile-menu">
+        <a
+            href="{{ path('app_profile') }}"
+            class="{{ activeSection == 'profile' ? 'is-active' : '' }}"
+            {{ activeSection == 'profile' ? 'aria-current="page"' : '' }}
+        >
+            Mon profil
+        </a>
+        <a
+            href="{{ path('app_customer_order_index') }}"
+            class="{{ activeSection == 'orders' ? 'is-active' : '' }}"
+            {{ activeSection == 'orders' ? 'aria-current="page"' : '' }}
+        >
+            Mes commandes
+        </a>
+        <a href="{{ path('app_forgot_password_request') }}">Sécurité du compte</a>
+        <a href="{{ path('app_logout') }}">Se déconnecter</a>
+    </nav>
+</aside>

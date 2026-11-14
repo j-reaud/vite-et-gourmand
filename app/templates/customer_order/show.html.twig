@@ -1,0 +1,123 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}Commande {{ order.reference }} | Vite &amp; Gourmand{% endblock %}
+
+{% block public_body %}
+    {% set statusLabels = {
+        pending: 'En attente',
+        confirmed: 'Confirmée',
+        preparing: 'En préparation',
+        ready: 'Prête',
+        delivered: 'Livrée',
+        cancelled: 'Annulée'
+    } %}
+
+    <main class="order-history">
+        <div class="order-history__shell">
+            <nav class="order-history__breadcrumb" aria-label="Fil d’Ariane">
+                <a href="{{ path('app_home') }}">Accueil</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ path('app_customer_order_index') }}">Mes commandes</a>
+                <span aria-hidden="true">/</span>
+                <strong>{{ order.reference }}</strong>
+            </nav>
+
+            <section class="order-detail" aria-labelledby="order-detail-title">
+                <header class="order-detail__heading">
+                    <div>
+                        <p class="order-history__eyebrow">Détail de la commande</p>
+                        <h1 id="order-detail-title">{{ order.reference }}</h1>
+                    </div>
+
+                    <span class="order-status order-status--{{ order.status }}">
+                        {{ statusLabels[order.status]|default(order.status) }}
+                    </span>
+                </header>
+
+                <section class="order-detail__section">
+                    <h2>Informations client</h2>
+
+                    <dl class="order-detail__grid">
+                        <div>
+                            <dt>Nom</dt>
+                            <dd>{{ order.customer.firstName }} {{ order.customer.lastName }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Adresse e-mail</dt>
+                            <dd>{{ order.customer.email }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Téléphone</dt>
+                            <dd>{{ order.customer.phone }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Adresse de livraison</dt>
+                            <dd>{{ order.deliveryAddress }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="order-detail__section">
+                    <h2>Prestation</h2>
+
+                    <dl class="order-detail__grid">
+                        <div>
+                            <dt>Menu sélectionné</dt>
+                            <dd>{{ order.menuName }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Date de commande</dt>
+                            <dd>{{ order.orderedAt|date('d/m/Y') }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Livraison</dt>
+                            <dd>{{ order.deliveryAt|date('d/m/Y à H\\hi') }}</dd>
+                        </div>
+
+                        <div>
+                            <dt>Nombre de personnes</dt>
+                            <dd>{{ order.numberOfPeople }}</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="order-detail__section order-price">
+                    <h2>Récapitulatif</h2>
+
+                    <dl>
+                        <div>
+                            <dt>Prix du menu</dt>
+                            <dd>{{ order.menuPrice|number_format(2, ',', ' ') }} €</dd>
+                        </div>
+
+                        {% if order.discountAmount is not null and order.discountAmount > 0 %}
+                            <div>
+                                <dt>Réduction</dt>
+                                <dd>− {{ order.discountAmount|number_format(2, ',', ' ') }} €</dd>
+                            </div>
+                        {% endif %}
+
+                        <div>
+                            <dt>Frais de livraison</dt>
+                            <dd>{{ order.deliveryCharge|number_format(2, ',', ' ') }} €</dd>
+                        </div>
+
+                        <div class="order-price__total">
+                            <dt>Total</dt>
+                            <dd>{{ order.totalPrice|number_format(2, ',', ' ') }} €</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <a class="order-detail__back" href="{{ path('app_customer_order_index') }}">
+                    ← Retour à mes commandes
+                </a>
+            </section>
+        </div>
+    </main>
+{% endblock %}
