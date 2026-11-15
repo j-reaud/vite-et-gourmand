@@ -23,12 +23,20 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
 
     public function calculate(string $deliveryAddress): DeliveryQuote
     {
+        if (preg_match('/(?:^|\D)\d{5}(?:\D|$)/', $deliveryAddress) !== 1) {
+            throw new DeliveryCalculationException(
+                'Veuillez saisir une adresse comprenant un code postal '
+                .'à cinq chiffres.',
+            );
+        }
+
         $destination = $this->geocode($deliveryAddress);
 
         if ($destination['cityCode'] === self::BORDEAUX_CITY_CODE) {
             return new DeliveryQuote(
                 distanceKm: 0.0,
                 deliveryFeeInCents: self::BASE_DELIVERY_FEE_IN_CENTS,
+                recognizedAddress: $destination['label'],
             );
         }
 
@@ -45,6 +53,7 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
         return new DeliveryQuote(
             distanceKm: $distanceKm,
             deliveryFeeInCents: $deliveryFeeInCents,
+            recognizedAddress: $destination['label'],
         );
     }
 
@@ -52,7 +61,8 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
      * @return array{
      *     longitude: float,
      *     latitude: float,
-     *     cityCode: string
+     *     cityCode: string,
+     *     label: string
      * }
      */
     private function geocode(string $address): array
@@ -84,6 +94,7 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
         $feature = $data['features'][0] ?? null;
         $coordinates = $feature['geometry']['coordinates'] ?? null;
         $cityCode = $feature['properties']['citycode'] ?? null;
+        $label = $feature['properties']['label'] ?? null;
 
         if (
             !is_array($coordinates)
@@ -91,6 +102,8 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
             || !is_numeric($coordinates[0])
             || !is_numeric($coordinates[1])
             || !is_string($cityCode)
+            || !is_string($label)
+            || trim($label) === ''
         ) {
             throw new DeliveryCalculationException(
                 'L’adresse de livraison n’a pas pu être localisée.',
@@ -101,6 +114,7 @@ final class IgnDeliveryCalculator implements DeliveryCalculatorInterface
             'longitude' => (float) $coordinates[0],
             'latitude' => (float) $coordinates[1],
             'cityCode' => $cityCode,
+            'label' => $label,
         ];
     }
 

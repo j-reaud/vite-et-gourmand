@@ -21,6 +21,7 @@ final class DeliveryCalculatorTest extends TestCase
                     ],
                     'properties' => [
                         'citycode' => '33063',
+                        'label' => '1 Place Pey Berland 33000 Bordeaux',
                     ],
                 ]],
             ], JSON_THROW_ON_ERROR)),
@@ -38,6 +39,10 @@ final class DeliveryCalculatorTest extends TestCase
 
         self::assertSame(0.0, $quote->getDistanceKm());
         self::assertSame(500, $quote->getDeliveryFeeInCents());
+        self::assertSame(
+            '1 Place Pey Berland 33000 Bordeaux',
+            $quote->getRecognizedAddress(),
+        );
         self::assertSame('0.00', $quote->getFormattedDistance());
         self::assertSame('5.00', $quote->getFormattedDeliveryFee());
     }
@@ -53,6 +58,7 @@ final class DeliveryCalculatorTest extends TestCase
                     ],
                     'properties' => [
                         'citycode' => '33243',
+                        'label' => 'Place Abel Surchamp 33500 Libourne',
                     ],
                 ]],
             ], JSON_THROW_ON_ERROR)),
@@ -73,6 +79,10 @@ final class DeliveryCalculatorTest extends TestCase
 
         self::assertSame(35.4, $quote->getDistanceKm());
         self::assertSame(2589, $quote->getDeliveryFeeInCents());
+        self::assertSame(
+            'Place Abel Surchamp 33500 Libourne',
+            $quote->getRecognizedAddress(),
+        );
         self::assertSame('35.40', $quote->getFormattedDistance());
         self::assertSame('25.89', $quote->getFormattedDeliveryFee());
     }
@@ -97,7 +107,25 @@ final class DeliveryCalculatorTest extends TestCase
             'L’adresse de livraison n’a pas pu être localisée.',
         );
 
-        $calculator->calculate('Adresse inexistante');
+        $calculator->calculate('Adresse inexistante 99999');
+    }
+
+    // Verifies that the customer must provide a five-digit postal code.
+    public function testAddressWithoutPostalCodeIsRejected(): void
+    {
+        $calculator = new IgnDeliveryCalculator(
+            new MockHttpClient(),
+            -0.57918,
+            44.83779,
+        );
+
+        $this->expectException(DeliveryCalculationException::class);
+        $this->expectExceptionMessage(
+            'Veuillez saisir une adresse comprenant un code postal '
+            .'à cinq chiffres.',
+        );
+
+        $calculator->calculate('12 avenue Victor Hugo');
     }
 
     // Verifies that an IGN service failure becomes a controlled error.

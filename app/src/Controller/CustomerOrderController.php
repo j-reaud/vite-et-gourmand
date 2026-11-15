@@ -153,6 +153,7 @@ final class CustomerOrderController extends AbstractController
 
         return $this->json([
             'distanceKm' => $deliveryQuote->getFormattedDistance(),
+            'recognizedAddress' => $deliveryQuote->getRecognizedAddress(),
             'menuPrice' => number_format(
                 $menuPriceInCents / 100,
                 2,
@@ -263,6 +264,9 @@ final class CustomerOrderController extends AbstractController
         $order
             ->setMenuPrice($calculatedPrice)
             ->setDiscountAmount('0.00')
+            ->setDeliveryAddress(
+                $deliveryQuote->getRecognizedAddress(),
+            )
             ->setDeliveryDistanceKm(
                 $deliveryQuote->getFormattedDistance(),
             )

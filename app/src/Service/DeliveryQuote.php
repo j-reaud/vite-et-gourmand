@@ -7,6 +7,7 @@ final readonly class DeliveryQuote
     public function __construct(
         private float $distanceKm,
         private int $deliveryFeeInCents,
+        private string $recognizedAddress,
     ) {
     }
 
@@ -18,6 +19,11 @@ final readonly class DeliveryQuote
     public function getDeliveryFeeInCents(): int
     {
         return $this->deliveryFeeInCents;
+    }
+
+    public function getRecognizedAddress(): string
+    {
+        return $this->recognizedAddress;
     }
 
     public function getFormattedDistance(): string
