@@ -2,7 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\CustomerOrder;
 use App\Entity\Menu;
+use App\Entity\User;
+use App\Form\OrderPlacementFormType;
 use App\Repository\MenuRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,8 +46,41 @@ final class MenuController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $user = $this->getUser();
+        $orderForm = null;
+        $minimumPeople = $menu->getMinimumPeople();
+
+        if (
+            $user instanceof User
+            && !$this->isGranted('ROLE_EMPLOYEE')
+            && !$this->isGranted('ROLE_ADMIN')
+            && $menu->getStock() > 0
+            && $minimumPeople !== null
+        ) {
+            $order = (new CustomerOrder())
+                ->setDeliveryAddress((string) $user->getAddress())
+                ->setNumberOfPeople($minimumPeople)
+                ->setDiscountAmount('0.00');
+
+            $orderForm = $this->createForm(
+                OrderPlacementFormType::class,
+                $order,
+                [
+                    'customer' => $user,
+                    'minimum_people' => $minimumPeople,
+                    'action' => $this->generateUrl(
+                        'app_customer_order_place',
+                        ['slug' => $menu->getSlug()],
+                    ),
+                    'method' => 'POST',
+                ],
+            );
+        }
+
         return $this->render('menu/show.html.twig', [
             'menu' => $menu,
+            'orderForm' => $orderForm?->createView(),
+            'openOrderModal' => false,
         ]);
     }
 
