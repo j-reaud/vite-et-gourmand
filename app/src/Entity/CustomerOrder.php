@@ -80,6 +80,17 @@ class CustomerOrder
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $deliveryCharge = null;
 
+    #[Assert\PositiveOrZero(
+        message: 'La distance de livraison ne peut pas être négative.',
+    )]
+    #[ORM\Column(
+        type: Types::DECIMAL,
+        precision: 8,
+        scale: 2,
+        nullable: true,
+    )]
+    private ?string $deliveryDistanceKm = null;
+
     #[Assert\Positive(message: 'Le total doit être supérieur à zéro.')]
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     private ?string $totalPrice = null;
@@ -226,6 +237,19 @@ class CustomerOrder
     public function setDeliveryCharge(string $deliveryCharge): static
     {
         $this->deliveryCharge = $deliveryCharge;
+
+        return $this;
+    }
+
+    public function getDeliveryDistanceKm(): ?string
+    {
+        return $this->deliveryDistanceKm;
+    }
+
+    public function setDeliveryDistanceKm(
+        ?string $deliveryDistanceKm,
+    ): static {
+        $this->deliveryDistanceKm = $deliveryDistanceKm;
 
         return $this;
     }

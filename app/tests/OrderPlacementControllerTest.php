@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\CustomerOrderRepository;
 use App\Repository\MenuRepository;
 use App\Repository\UserRepository;
+use App\Tests\Double\FakeDeliveryCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -102,7 +103,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '10 rue de la Paix, Bordeaux',
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
                     'deliveryAt' => (new \DateTimeImmutable('+3 days'))
                         ->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 4,
@@ -132,6 +133,53 @@ final class OrderPlacementControllerTest extends WebTestCase
         );
     }
 
+    // Verifies that the recap receives the server-calculated Bordeaux fee.
+    public function testDeliveryQuoteIncludesBordeauxFee(): void
+    {
+        $this->client->loginUser($this->customer);
+        $crawler = $this->client->request(
+            'GET',
+            '/menus/menu-de-commande',
+        );
+
+        $modal = $crawler->filter('#orderPlacementModal');
+
+        $quoteUrl = $modal->attr(
+            'data-order-placement-quote-url-value',
+        );
+        $quoteToken = $modal->attr(
+            'data-order-placement-quote-token-value',
+        );
+
+        $this->client->request(
+            'POST',
+            $quoteUrl,
+            [
+                '_token' => $quoteToken,
+                'deliveryAddress' => '1 Place Pey Berland, 33000 Bordeaux',
+                'numberOfPeople' => 6,
+            ],
+        );
+
+        self::assertResponseIsSuccessful();
+
+        $response = $this->client->getResponse();
+        $data = json_decode(
+            (string) $response->getContent(),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        self::assertSame('0.00', $data['distanceKm']);
+        self::assertSame(
+            FakeDeliveryCalculator::RECOGNIZED_ADDRESS,
+            $data['recognizedAddress'],
+        );
+        self::assertSame('180.00', $data['menuPrice']);
+        self::assertSame('5.00', $data['deliveryCharge']);
+        self::assertSame('185.00', $data['totalPrice']);
+    }
+
     // Verifies order creation, server-side pricing, and stock reduction.
     public function testCustomerCanPlaceOrderWithServerCalculatedPrice(): void
     {
@@ -152,7 +200,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '10 rue de la Paix, Bordeaux',
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
                     'deliveryAt' => $deliveryAt->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 6,
                     'discountAmount' => '9999.00',
@@ -183,10 +231,12 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertSame(6, $order->getNumberOfPeople());
         self::assertSame('180.00', $order->getMenuPrice());
         self::assertSame('0.00', $order->getDiscountAmount());
-        self::assertSame('0.00', $order->getDeliveryCharge());
-        self::assertSame('180.00', $order->getTotalPrice());
+        self::assertSame('0.00', $order->getDeliveryDistanceKm());
+        self::assertSame('5.00', $order->getDeliveryCharge());
+        self::assertSame('185.00', $order->getTotalPrice());
+        // The address typed by the customer is kept, not the IGN label.
         self::assertSame(
-            '10 rue de la Paix, Bordeaux',
+            '10 rue de la Paix, 33000 Bordeaux',
             $order->getDeliveryAddress(),
         );
 
@@ -216,7 +266,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '10 rue de la Paix, Bordeaux',
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
                     'deliveryAt' => (new \DateTimeImmutable('+3 days'))
                         ->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 3,
@@ -254,7 +304,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '10 rue de la Paix, Bordeaux',
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
                     'deliveryAt' => (new \DateTimeImmutable('-1 day'))
                         ->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 4,
@@ -315,7 +365,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '10 rue de la Paix, Bordeaux',
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
                     'deliveryAt' => (new \DateTimeImmutable('+3 days'))
                         ->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 4,
@@ -336,7 +386,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             '/profile/orders/new/menu-de-commande',
             [
                 'order_placement_form' => [
-                    'deliveryAddress' => '20 rue du Port, Bordeaux',
+                    'deliveryAddress' => '20 rue du Port, 33000 Bordeaux',
                     'deliveryAt' => (new \DateTimeImmutable('+5 days'))
                         ->format('Y-m-d\TH:i'),
                     'numberOfPeople' => 5,
@@ -363,7 +413,7 @@ final class OrderPlacementControllerTest extends WebTestCase
             ->setFirstName('Camille')
             ->setLastName('Martin')
             ->setPhone('0612345678')
-            ->setAddress('24 rue Sainte-Catherine, Bordeaux')
+            ->setAddress('24 rue Sainte-Catherine, 33000 Bordeaux')
             ->setRoles($roles)
             ->setIsActive(true)
             ->setPassword('hashed-password');
