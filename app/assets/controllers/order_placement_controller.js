@@ -20,11 +20,16 @@ export default class extends Controller {
         basePrice: Number,
         minimumPeople: Number,
         open: Boolean,
+        openRecap: Boolean,
     };
 
     connect() {
         if (this.hasPeopleTarget) {
             this.updateTotal();
+        }
+
+        if (this.openRecapValue && this.hasRecapTabTarget) {
+            Tab.getOrCreateInstance(this.recapTabTarget).show();
         }
 
         if (this.openValue) {

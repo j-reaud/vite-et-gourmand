@@ -9,6 +9,7 @@
         data-order-placement-base-price-value="{{ menu.price }}"
         data-order-placement-minimum-people-value="{{ menu.minimumPeople }}"
         data-order-placement-open-value="{{ openOrderModal ? 'true' : 'false' }}"
+        data-order-placement-open-recap-value="{{ orderForm.numberOfPeople.vars.errors|length > 0 ? 'true' : 'false' }}"
     >
         <div class="modal-dialog modal-dialog-centered modal-lg">
             {{ form_start(orderForm, {

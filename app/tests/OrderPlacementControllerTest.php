@@ -230,6 +230,9 @@ final class OrderPlacementControllerTest extends WebTestCase
             '.invalid-feedback',
             'Ce menu nécessite au minimum 4 personnes.',
         );
+        self::assertSelectorExists(
+            '#orderPlacementModal[data-order-placement-open-recap-value="true"]',
+        );
         self::assertCount(0, $this->orderRepository->findAll());
     }
 
