@@ -181,6 +181,66 @@ final class CustomerOrderController extends AbstractController
         ]);
     }
 
+    #[Route(
+        '/{id}/cancel',
+        name: 'cancel',
+        requirements: ['id' => '\d+'],
+        methods: ['POST'],
+    )]
+    public function cancel(
+        int $id,
+        Request $request,
+        CustomerOrderRepository $orderRepository,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $customer = $this->getAuthenticatedCustomer();
+        $order = $orderRepository->findOneForCustomer($id, $customer);
+
+        if ($order === null) {
+            throw $this->createNotFoundException('Commande introuvable.');
+        }
+
+        if (
+            !$this->isCsrfTokenValid(
+                'cancel_order_'.$order->getId(),
+                $request->request->getString('_token'),
+            )
+        ) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        if (!$order->isCancellable()) {
+            $this->addFlash(
+                'order_cancel_unavailable',
+                'Cette commande ne peut plus être annulée. '
+                .'Contactez-nous pour obtenir plus d’informations.',
+            );
+
+            return $this->redirectToRoute('app_customer_order_show', [
+                'id' => $order->getId(),
+            ]);
+        }
+
+        $order->setStatus(CustomerOrder::STATUS_CANCELLED);
+
+        $menu = $order->getMenu();
+
+        if ($menu !== null) {
+            $menu->setStock($menu->getStock() + 1);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash(
+            'order_cancel_success',
+            'Votre commande a bien été annulée.',
+        );
+
+        return $this->redirectToRoute('app_customer_order_show', [
+            'id' => $order->getId(),
+        ]);
+    }
+
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(
         int $id,
