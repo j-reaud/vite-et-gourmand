@@ -6,6 +6,7 @@ import { startStimulusApp } from '@symfony/stimulus-bundle';
 import CatalogueFiltersController from './controllers/catalogue_filters_controller.js';
 import ProfileEditorController from './controllers/profile_editor_controller.js';
 import OrderFiltersController from './controllers/order_filters_controller.js';
+import OrderPlacementController from './controllers/order_placement_controller.js';
 
 // Boots the Stimulus application for this page.
 const app = startStimulusApp();
@@ -16,3 +17,4 @@ app.register('catalogue-filters', CatalogueFiltersController);
 // what you reference in HTML via data-controller="profile-editor".
 app.register('profile-editor', ProfileEditorController);
 app.register('order-filters', OrderFiltersController);
+app.register('order-placement', OrderPlacementController);

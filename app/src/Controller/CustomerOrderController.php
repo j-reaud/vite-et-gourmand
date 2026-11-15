@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\CustomerOrder;
+use App\Entity\Menu;
 use App\Entity\User;
+use App\Form\OrderPlacementFormType;
 use App\Repository\CustomerOrderRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -86,6 +89,98 @@ final class CustomerOrderController extends AbstractController
         ]);
     }
 
+    #[Route('/new/{slug}', name: 'place', methods: ['POST'])]
+    public function place(
+        Menu $menu,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $customer = $this->getAuthenticatedCustomer();
+
+        if (!$menu->isPublished() || $menu->getStock() < 1) {
+            throw $this->createNotFoundException('Ce menu est indisponible.');
+        }
+
+        $minimumPeople = $menu->getMinimumPeople();
+
+        if ($minimumPeople === null || $minimumPeople < 1) {
+            throw $this->createNotFoundException(
+                'Le nombre minimum de personnes est invalide.',
+            );
+        }
+
+        $order = (new CustomerOrder())
+            ->setCustomer($customer)
+            ->setMenu($menu)
+            ->setMenuName((string) $menu->getTitle())
+            ->setOrderedAt(new \DateTimeImmutable())
+            ->setNumberOfPeople($minimumPeople)
+            ->setStatus(CustomerOrder::STATUS_PENDING)
+            ->setMenuPrice((string) $menu->getPrice())
+            ->setDiscountAmount('0.00')
+            ->setDeliveryCharge('0.00')
+            ->setTotalPrice((string) $menu->getPrice())
+            ->setDeliveryAddress((string) $customer->getAddress());
+
+        $form = $this->createForm(
+            OrderPlacementFormType::class,
+            $order,
+            [
+                'customer' => $customer,
+                'minimum_people' => $minimumPeople,
+            ],
+        );
+
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted() || !$form->isValid()) {
+            return $this->render(
+                'menu/show.html.twig',
+                [
+                    'menu' => $menu,
+                    'orderForm' => $form->createView(),
+                    'openOrderModal' => true,
+                ],
+                new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY),
+            );
+        }
+
+        $numberOfPeople = $order->getNumberOfPeople();
+        $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
+        $totalInCents = (int) round(
+            ($basePriceInCents / $minimumPeople) * $numberOfPeople,
+        );
+        $calculatedPrice = number_format(
+            $totalInCents / 100,
+            2,
+            '.',
+            '',
+        );
+
+        $order
+            ->setMenuPrice($calculatedPrice)
+            ->setDiscountAmount('0.00')
+            ->setDeliveryCharge('0.00')
+            ->setTotalPrice($calculatedPrice)
+            ->setStatus(CustomerOrder::STATUS_PENDING);
+
+        $menu->setStock($menu->getStock() - 1);
+
+        $entityManager->persist($order);
+        $entityManager->flush();
+
+        $this->addFlash(
+            'order_success',
+            'Votre commande a bien été transmise à nos équipes. '
+            .'Une fois votre commande confirmée, vous recevrez '
+            .'une confirmation dans votre espace client.',
+        );
+
+        return $this->redirectToRoute('app_menu_show', [
+            'slug' => $menu->getSlug(),
+        ]);
+    }
+
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(
         int $id,
@@ -107,7 +202,11 @@ final class CustomerOrderController extends AbstractController
     {
         $user = $this->getUser();
 
-        if (!$user instanceof User || $this->isGranted('ROLE_EMPLOYEE')) {
+        if (
+            !$user instanceof User
+            || $this->isGranted('ROLE_EMPLOYEE')
+            || $this->isGranted('ROLE_ADMIN')
+        ) {
             throw $this->createAccessDeniedException();
         }
 

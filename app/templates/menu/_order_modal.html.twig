@@ -1,0 +1,288 @@
+{% if orderForm %}
+    <div
+        class="modal fade order-placement-modal"
+        id="orderPlacementModal"
+        tabindex="-1"
+        aria-labelledby="orderPlacementModalLabel"
+        aria-hidden="true"
+        data-controller="order-placement"
+        data-order-placement-base-price-value="{{ menu.price }}"
+        data-order-placement-minimum-people-value="{{ menu.minimumPeople }}"
+        data-order-placement-open-value="{{ openOrderModal ? 'true' : 'false' }}"
+    >
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            {{ form_start(orderForm, {
+                attr: {
+                    class: 'modal-content'
+                }
+            }) }}
+                <div class="modal-header">
+                    <div>
+                        <p class="text-uppercase small text-secondary mb-1">
+                            Commander
+                        </p>
+                        <h2 class="modal-title fs-4" id="orderPlacementModalLabel">
+                            {{ menu.title }}
+                        </h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Fermer"
+                    ></button>
+                </div>
+
+                <div class="modal-body">
+                    {{ form_errors(orderForm) }}
+
+                    <ul class="nav nav-tabs mb-4" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button
+                                type="button"
+                                class="nav-link active"
+                                data-bs-target="#order-details-pane"
+                                data-order-placement-target="detailsTab"
+                                data-action="order-placement#showForm"
+                                role="tab"
+                                aria-controls="order-details-pane"
+                                aria-selected="true"
+                            >
+                                1. Livraison
+                            </button>
+                        </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button
+                                type="button"
+                                class="nav-link"
+                                data-bs-target="#order-recap-pane"
+                                data-order-placement-target="recapTab"
+                                role="tab"
+                                aria-controls="order-recap-pane"
+                                aria-selected="false"
+                            >
+                                2. Récapitulatif
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <section
+                            class="tab-pane fade show active"
+                            id="order-details-pane"
+                            data-order-placement-target="stepOne"
+                            role="tabpanel"
+                            tabindex="0"
+                        >
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    {{ form_row(orderForm.firstName) }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    {{ form_row(orderForm.lastName) }}
+                                </div>
+
+                                <div class="col-12">
+                                    {{ form_row(orderForm.phone) }}
+                                </div>
+
+                                <div class="col-12">
+                                    {{ form_row(orderForm.deliveryAddress, {
+                                        attr: {
+                                            autocomplete: 'street-address',
+                                            'data-order-placement-target': 'address'
+                                        }
+                                    }) }}
+                                </div>
+
+                                <div class="col-12">
+                                    {{ form_row(orderForm.deliveryAt, {
+                                        attr: {
+                                            'data-order-placement-target': 'delivery'
+                                        }
+                                    }) }}
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button
+                                    type="button"
+                                    class="btn btn-primary"
+                                    data-action="order-placement#showRecap"
+                                >
+                                    Continuer
+                                </button>
+                            </div>
+                        </section>
+
+                        <section
+                            class="tab-pane fade"
+                            id="order-recap-pane"
+                            role="tabpanel"
+                            tabindex="0"
+                        >
+                            <dl class="row mb-4">
+                                <dt class="col-sm-5">Client</dt>
+                                <dd class="col-sm-7">
+                                    {{ app.user.firstName }} {{ app.user.lastName }}
+                                </dd>
+
+                                <dt class="col-sm-5">Téléphone</dt>
+                                <dd class="col-sm-7">{{ app.user.phone }}</dd>
+
+                                <dt class="col-sm-5">Adresse</dt>
+                                <dd
+                                    class="col-sm-7"
+                                    data-order-placement-target="recapAddress"
+                                >
+                                    {{ orderForm.deliveryAddress.vars.value }}
+                                </dd>
+
+                                <dt class="col-sm-5">Livraison</dt>
+                                <dd
+                                    class="col-sm-7"
+                                    data-order-placement-target="recapDelivery"
+                                >
+                                    À définir
+                                </dd>
+
+                                <dt class="col-sm-5">Menu</dt>
+                                <dd class="col-sm-7">{{ menu.title }}</dd>
+
+                                <dt class="col-sm-5">Statut</dt>
+                                <dd class="col-sm-7">
+                                    <span class="order-status order-status--pending">
+                                        En attente
+                                    </span>
+                                </dd>
+                            </dl>
+
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-6">
+                                    {{ form_row(orderForm.numberOfPeople, {
+                                        attr: {
+                                            min: menu.minimumPeople,
+                                            'data-order-placement-target': 'people',
+                                            'data-action': 'input->order-placement#updateTotal'
+                                        }
+                                    }) }}
+                                </div>
+
+                                <div class="col-md-6">
+                                    {{ form_row(orderForm.discountAmount) }}
+                                </div>
+                            </div>
+
+                            <div class="card bg-light border-0 mt-4">
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-7">Nombre de personnes</dt>
+                                        <dd
+                                            class="col-5 text-end"
+                                            data-order-placement-target="recapPeople"
+                                        >
+                                            {{ menu.minimumPeople }}
+                                        </dd>
+
+                                        <dt class="col-7">Prix avant réduction</dt>
+                                        <dd
+                                            class="col-5 text-end"
+                                            data-order-placement-target="subtotal"
+                                        >
+                                            {{ menu.price|number_format(2, ',', ' ') }} €
+                                        </dd>
+
+                                        <dt class="col-7">Réduction</dt>
+                                        <dd class="col-5 text-end">0,00 €</dd>
+
+                                        <dt class="col-7 fs-5">Total après réduction</dt>
+                                        <dd
+                                            class="col-5 text-end fs-5 fw-bold"
+                                            data-order-placement-target="total"
+                                        >
+                                            {{ menu.price|number_format(2, ',', ' ') }} €
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-between mt-4">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-action="order-placement#showForm"
+                                >
+                                    Retour
+                                </button>
+
+                                <button type="submit" class="btn btn-primary">
+                                    Confirmer
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            {{ form_end(orderForm) }}
+        </div>
+    </div>
+{% endif %}
+
+{% set orderSuccessMessages = app.flashes('order_success') %}
+
+{% if orderSuccessMessages is not empty %}
+    <div
+        class="modal fade order-placement-modal"
+        id="orderSuccessModal"
+        data-turbo-temporary
+        tabindex="-1"
+        aria-labelledby="orderSuccessModalLabel"
+        aria-hidden="true"
+        data-controller="order-placement"
+        data-order-placement-open-value="true"
+    >
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-4" id="orderSuccessModalLabel">
+                        Commande transmise
+                    </h2>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Fermer"
+                    ></button>
+                </div>
+
+                <div class="modal-body">
+                    {% for message in orderSuccessMessages %}
+                        <div class="alert alert-success mb-0" role="status">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Fermer
+                    </button>
+
+                    <a
+                        class="btn btn-primary"
+                        href="{{ path('app_customer_order_index') }}"
+                    >
+                        Mes commandes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

@@ -17,7 +17,27 @@
                 {% else %}
                     <p class="menu-detail__availability menu-detail__availability--empty">Ce menu est actuellement indisponible.</p>
                 {% endif %}
+                {% if menu.stock > 0 %}
+                    {% if orderForm %}
+                        <button
+                            type="button"
+                            class="btn catalogue-card__button w-100 mt-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#orderPlacementModal"
+                        >
+                            Commander
+                        </button>
+                    {% elseif not app.user %}
+                        <a
+                            class="btn catalogue-card__button w-100 mt-3"
+                            href="{{ path('app_login') }}"
+                        >
+                            Commander
+                        </a>
+                    {% endif %}
+                {% endif %}
             </div>
         </div>
     </main>
+    {{ include('menu/_order_modal.html.twig') }}
 {% endblock %}
