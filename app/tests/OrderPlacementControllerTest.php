@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\CustomerOrderRepository;
 use App\Repository\MenuRepository;
 use App\Repository\UserRepository;
+use App\Tests\Double\FakeDeliveryCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -171,7 +172,7 @@ final class OrderPlacementControllerTest extends WebTestCase
 
         self::assertSame('0.00', $data['distanceKm']);
         self::assertSame(
-            '1 Place Pey Berland, 33000 Bordeaux',
+            FakeDeliveryCalculator::RECOGNIZED_ADDRESS,
             $data['recognizedAddress'],
         );
         self::assertSame('180.00', $data['menuPrice']);
@@ -233,6 +234,7 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertSame('0.00', $order->getDeliveryDistanceKm());
         self::assertSame('5.00', $order->getDeliveryCharge());
         self::assertSame('185.00', $order->getTotalPrice());
+        // The address typed by the customer is kept, not the IGN label.
         self::assertSame(
             '10 rue de la Paix, 33000 Bordeaux',
             $order->getDeliveryAddress(),

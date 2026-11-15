@@ -264,9 +264,6 @@ final class CustomerOrderController extends AbstractController
         $order
             ->setMenuPrice($calculatedPrice)
             ->setDiscountAmount('0.00')
-            ->setDeliveryAddress(
-                $deliveryQuote->getRecognizedAddress(),
-            )
             ->setDeliveryDistanceKm(
                 $deliveryQuote->getFormattedDistance(),
             )

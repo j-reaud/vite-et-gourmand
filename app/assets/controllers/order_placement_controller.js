@@ -11,6 +11,7 @@ export default class extends Controller {
         'delivery',
         'recapPeople',
         'recapAddress',
+        'recognizedAddress',
         'recapDelivery',
         'subtotal',
         'deliveryDistance',
@@ -141,11 +142,14 @@ export default class extends Controller {
             || !Number.isFinite(deliveryFee)
             || !Number.isFinite(menuPrice)
             || !Number.isFinite(totalPrice)
+            || typeof quote.recognizedAddress !== 'string'
+            || quote.recognizedAddress.trim() === ''
         ) {
             throw new Error('Le calcul de la livraison est invalide.');
         }
 
         this.deliveryFeeValue = deliveryFee;
+        this.recognizedAddressTarget.textContent = quote.recognizedAddress;
         this.deliveryDistanceTarget.textContent = distance === 0
             ? 'Bordeaux'
             : `${this.formatNumber(distance)} km`;
