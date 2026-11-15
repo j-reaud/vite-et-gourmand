@@ -5,10 +5,14 @@ namespace App\Controller;
 use App\Entity\CustomerOrder;
 use App\Entity\Menu;
 use App\Entity\User;
+use App\Exception\DeliveryCalculationException;
 use App\Form\OrderPlacementFormType;
 use App\Repository\CustomerOrderRepository;
+use App\Service\DeliveryCalculatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -89,11 +93,88 @@ final class CustomerOrderController extends AbstractController
         ]);
     }
 
+    #[Route(
+        '/delivery-quote/{slug}',
+        name: 'delivery_quote',
+        methods: ['POST'],
+    )]
+    public function deliveryQuote(
+        Menu $menu,
+        Request $request,
+        DeliveryCalculatorInterface $deliveryCalculator,
+    ): JsonResponse {
+        $this->getAuthenticatedCustomer();
+
+        if (
+            !$this->isCsrfTokenValid(
+                'delivery_quote_'.$menu->getId(),
+                $request->request->getString('_token'),
+            )
+        ) {
+            throw $this->createAccessDeniedException('Jeton CSRF invalide.');
+        }
+
+        $deliveryAddress = trim(
+            $request->request->getString('deliveryAddress'),
+        );
+        $numberOfPeople = $request->request->getInt('numberOfPeople');
+        $minimumPeople = $menu->getMinimumPeople();
+
+        if (
+            $deliveryAddress === ''
+            || $minimumPeople === null
+            || $numberOfPeople < $minimumPeople
+            || !$menu->isPublished()
+            || $menu->getStock() < 1
+        ) {
+            return $this->json(
+                ['error' => 'Les informations de livraison sont invalides.'],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        try {
+            $deliveryQuote = $deliveryCalculator->calculate(
+                $deliveryAddress,
+            );
+        } catch (DeliveryCalculationException $exception) {
+            return $this->json(
+                ['error' => $exception->getMessage()],
+                Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
+        $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
+        $menuPriceInCents = (int) round(
+            ($basePriceInCents / $minimumPeople) * $numberOfPeople,
+        );
+        $totalInCents = $menuPriceInCents
+            + $deliveryQuote->getDeliveryFeeInCents();
+
+        return $this->json([
+            'distanceKm' => $deliveryQuote->getFormattedDistance(),
+            'menuPrice' => number_format(
+                $menuPriceInCents / 100,
+                2,
+                '.',
+                '',
+            ),
+            'deliveryCharge' => $deliveryQuote->getFormattedDeliveryFee(),
+            'totalPrice' => number_format(
+                $totalInCents / 100,
+                2,
+                '.',
+                '',
+            ),
+        ]);
+    }
+
     #[Route('/new/{slug}', name: 'place', methods: ['POST'])]
     public function place(
         Menu $menu,
         Request $request,
         EntityManagerInterface $entityManager,
+        DeliveryCalculatorInterface $deliveryCalculator,
     ): Response {
         $customer = $this->getAuthenticatedCustomer();
 
@@ -145,6 +226,26 @@ final class CustomerOrderController extends AbstractController
             );
         }
 
+        try {
+            $deliveryQuote = $deliveryCalculator->calculate(
+                (string) $order->getDeliveryAddress(),
+            );
+        } catch (DeliveryCalculationException $exception) {
+            $form->get('deliveryAddress')->addError(
+                new FormError($exception->getMessage()),
+            );
+
+            return $this->render(
+                'menu/show.html.twig',
+                [
+                    'menu' => $menu,
+                    'orderForm' => $form->createView(),
+                    'openOrderModal' => true,
+                ],
+                new Response(status: Response::HTTP_UNPROCESSABLE_ENTITY),
+            );
+        }
+
         $numberOfPeople = $order->getNumberOfPeople();
         $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
         $totalInCents = (int) round(
@@ -156,12 +257,26 @@ final class CustomerOrderController extends AbstractController
             '.',
             '',
         );
+        $deliveryFeeInCents = $deliveryQuote->getDeliveryFeeInCents();
+        $finalTotalInCents = $totalInCents + $deliveryFeeInCents;
 
         $order
             ->setMenuPrice($calculatedPrice)
             ->setDiscountAmount('0.00')
-            ->setDeliveryCharge('0.00')
-            ->setTotalPrice($calculatedPrice)
+            ->setDeliveryDistanceKm(
+                $deliveryQuote->getFormattedDistance(),
+            )
+            ->setDeliveryCharge(
+                $deliveryQuote->getFormattedDeliveryFee(),
+            )
+            ->setTotalPrice(
+                number_format(
+                    $finalTotalInCents / 100,
+                    2,
+                    '.',
+                    '',
+                ),
+            )
             ->setStatus(CustomerOrder::STATUS_PENDING);
 
         $menu->setStock($menu->getStock() - 1);

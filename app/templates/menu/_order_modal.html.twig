@@ -10,6 +10,14 @@
         data-order-placement-minimum-people-value="{{ menu.minimumPeople }}"
         data-order-placement-open-value="{{ openOrderModal ? 'true' : 'false' }}"
         data-order-placement-open-recap-value="{{ orderForm.numberOfPeople.vars.errors|length > 0 ? 'true' : 'false' }}"
+        data-order-placement-quote-url-value="{{ path(
+            'app_customer_order_delivery_quote',
+            {slug: menu.slug}
+        ) }}"
+        data-order-placement-quote-token-value="{{ csrf_token(
+            'delivery_quote_' ~ menu.id
+        ) }}"
+        data-order-placement-delivery-fee-value="0"
     >
         <div class="modal-dialog modal-dialog-centered modal-lg">
             {{ form_start(orderForm, {
@@ -37,6 +45,12 @@
 
                 <div class="modal-body">
                     {{ form_errors(orderForm) }}
+
+                    <div
+                        class="alert alert-danger d-none"
+                        role="alert"
+                        data-order-placement-target="quoteError"
+                    ></div>
 
                     <ul class="nav nav-tabs mb-4" role="tablist">
                         <li class="nav-item" role="presentation">
@@ -199,7 +213,23 @@
                                         <dt class="col-7">Réduction</dt>
                                         <dd class="col-5 text-end">0,00 €</dd>
 
-                                        <dt class="col-7 fs-5">Total après réduction</dt>
+                                        <dt class="col-7">Distance de livraison</dt>
+                                        <dd
+                                            class="col-5 text-end"
+                                            data-order-placement-target="deliveryDistance"
+                                        >
+                                            À calculer
+                                        </dd>
+
+                                        <dt class="col-7">Frais de livraison</dt>
+                                        <dd
+                                            class="col-5 text-end"
+                                            data-order-placement-target="deliveryCharge"
+                                        >
+                                            À calculer
+                                        </dd>
+
+                                        <dt class="col-7 fs-5">Total</dt>
                                         <dd
                                             class="col-5 text-end fs-5 fw-bold"
                                             data-order-placement-target="total"
