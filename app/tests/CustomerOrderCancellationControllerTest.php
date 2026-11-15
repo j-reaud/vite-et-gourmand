@@ -153,8 +153,8 @@ final class CustomerOrderCancellationControllerTest extends WebTestCase
         self::assertSame(10, $reloadedMenu->getStock());
     }
 
-    // Verifies that a confirmed order can also be cancelled.
-    public function testCustomerCanCancelConfirmedOrder(): void
+    // Verifies that an accepted, confirmed order cannot be cancelled.
+    public function testCustomerCannotCancelConfirmedOrder(): void
     {
         $order = $this->createOrder(
             $this->customer,
@@ -164,29 +164,27 @@ final class CustomerOrderCancellationControllerTest extends WebTestCase
         $orderId = $order->getId();
 
         $this->client->loginUser($this->customer);
-        $crawler = $this->client->request(
+        $this->client->request(
             'GET',
             '/profile/orders/'.$orderId,
         );
-        $token = $crawler
-            ->filter('form[action$="/cancel"] input[name="_token"]')
-            ->attr('value');
 
-        $this->client->request(
-            'POST',
-            '/profile/orders/'.$orderId.'/cancel',
-            ['_token' => $token],
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains(
+            '#cancelUnavailableModal',
+            'Cette commande ne peut plus être annulée.',
         );
+        self::assertSelectorNotExists('form[action$="/cancel"]');
 
-        self::assertResponseRedirects('/profile/orders/'.$orderId);
+        $orderRepository = static::getContainer()->get(
+            CustomerOrderRepository::class,
+        );
+        $confirmedOrder = $orderRepository->find($orderId);
 
-        $this->entityManager->clear();
-        $cancelledOrder = $this->orderRepository->find($orderId);
-
-        self::assertInstanceOf(CustomerOrder::class, $cancelledOrder);
+        self::assertInstanceOf(CustomerOrder::class, $confirmedOrder);
         self::assertSame(
-            CustomerOrder::STATUS_CANCELLED,
-            $cancelledOrder->getStatus(),
+            CustomerOrder::STATUS_CONFIRMED,
+            $confirmedOrder->getStatus(),
         );
     }
 
@@ -239,6 +237,7 @@ final class CustomerOrderCancellationControllerTest extends WebTestCase
 
     public static function nonCancellableStatuses(): iterable
     {
+        yield 'confirmed' => [CustomerOrder::STATUS_CONFIRMED];
         yield 'preparing' => [CustomerOrder::STATUS_PREPARING];
         yield 'ready' => [CustomerOrder::STATUS_READY];
         yield 'delivered' => [CustomerOrder::STATUS_DELIVERED];

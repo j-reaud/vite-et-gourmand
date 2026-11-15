@@ -191,16 +191,8 @@ class CustomerOrder
 
     public function isCancellable(): bool
     {
-        return in_array(
-            $this->status,
-            [
-                self::STATUS_PENDING,
-                self::STATUS_CONFIRMED,
-            ],
-            true,
-        );
+        return $this->status === self::STATUS_PENDING;
     }
-
 
     public function getMenuPrice(): ?string
     {
