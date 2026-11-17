@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\CustomerOrderRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -14,6 +16,7 @@ class CustomerOrder
     public const STATUS_CONFIRMED = 'confirmed';
     public const STATUS_PREPARING = 'preparing';
     public const STATUS_READY = 'ready';
+    public const STATUS_OUT_FOR_DELIVERY = 'out_for_delivery';
     public const STATUS_DELIVERED = 'delivered';
     public const STATUS_CANCELLED = 'cancelled';
 
@@ -22,6 +25,7 @@ class CustomerOrder
         self::STATUS_CONFIRMED,
         self::STATUS_PREPARING,
         self::STATUS_READY,
+        self::STATUS_OUT_FOR_DELIVERY,
         self::STATUS_DELIVERED,
         self::STATUS_CANCELLED,
     ];
@@ -99,6 +103,23 @@ class CustomerOrder
     #[Assert\Length(max: 255)]
     #[ORM\Column(length: 255)]
     private ?string $deliveryAddress = null;
+
+    /**
+     * @var Collection<int, OrderStatusHistory>
+     */
+    #[ORM\OneToMany(
+        targetEntity: OrderStatusHistory::class,
+        mappedBy: 'customerOrder',
+        cascade: ['persist', 'remove'],
+    )]
+    #[ORM\OrderBy(['changedAt' => 'ASC', 'id' => 'ASC'])]
+    private Collection $orderStatusHistories;
+
+    public function __construct()
+    {
+        $this->orderStatusHistories = new ArrayCollection();
+        $this->recordStatusChange(self::STATUS_PENDING);
+    }
 
     public function getId(): ?int
     {
@@ -195,7 +216,12 @@ class CustomerOrder
 
     public function setStatus(string $status): static
     {
+        if ($this->status === $status) {
+            return $this;
+        }
+
         $this->status = $status;
+        $this->recordStatusChange($status);
 
         return $this;
     }
@@ -203,6 +229,17 @@ class CustomerOrder
     public function isCancellable(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isTrackingAvailable(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_CONFIRMED,
+            self::STATUS_PREPARING,
+            self::STATUS_READY,
+            self::STATUS_OUT_FOR_DELIVERY,
+            self::STATUS_DELIVERED,
+        ], true);
     }
 
     public function getMenuPrice(): ?string
@@ -274,6 +311,44 @@ class CustomerOrder
     public function setDeliveryAddress(string $deliveryAddress): static
     {
         $this->deliveryAddress = $deliveryAddress;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrderStatusHistory>
+     */
+    public function getOrderStatusHistories(): Collection
+    {
+        return $this->orderStatusHistories;
+    }
+
+    private function recordStatusChange(string $status): void
+    {
+        $historyEntry = (new OrderStatusHistory())
+            ->setStatus($status);
+
+        $this->addOrderStatusHistory($historyEntry);
+    }
+
+    public function addOrderStatusHistory(OrderStatusHistory $orderStatusHistory): static
+    {
+        if (!$this->orderStatusHistories->contains($orderStatusHistory)) {
+            $this->orderStatusHistories->add($orderStatusHistory);
+            $orderStatusHistory->setCustomerOrder($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderStatusHistory(OrderStatusHistory $orderStatusHistory): static
+    {
+        if ($this->orderStatusHistories->removeElement($orderStatusHistory)) {
+            // set the owning side to null (unless already changed)
+            if ($orderStatusHistory->getCustomerOrder() === $this) {
+                $orderStatusHistory->setCustomerOrder(null);
+            }
+        }
 
         return $this;
     }
