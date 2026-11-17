@@ -197,7 +197,7 @@ final class CustomerOrderControllerTest extends WebTestCase
         );
         self::assertSelectorTextContains(
             '.order-status',
-            'Confirmée'
+            'Accepté'
         );
     }
 
@@ -297,6 +297,108 @@ final class CustomerOrderControllerTest extends WebTestCase
             '.orders-empty',
             'Aucune commande ne correspond à ces filtres'
         );
+    }
+
+    // Verifies that tracking is unavailable while an order is pending.
+    public function testPendingOrderDoesNotExposeTracking(): void
+    {
+        $pendingOrder = $this->createOrder(
+            $this->customer,
+            'Menu en attente',
+            new \DateTimeImmutable(),
+            new \DateTimeImmutable('+7 days'),
+            CustomerOrder::STATUS_PENDING,
+            '120.00',
+        );
+
+        $this->entityManager->flush();
+        $this->client->loginUser($this->customer);
+        $this->client->request(
+            'GET',
+            '/profile/orders/'.$pendingOrder->getId(),
+        );
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorNotExists('#order-tracking-tab');
+        self::assertSelectorNotExists('#order-tracking-panel');
+    }
+
+    // Verifies that accepted orders show their chronological, dated history.
+    public function testAcceptedOrderDisplaysTrackingHistory(): void
+    {
+        $this->client->loginUser($this->customer);
+        $crawler = $this->client->request(
+            'GET',
+            '/profile/orders/'.$this->recentOrder->getId(),
+        );
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorExists('#order-tracking-tab');
+        self::assertSelectorExists('#order-tracking-panel');
+
+        $events = $crawler->filter('.order-tracking__item');
+
+        self::assertCount(2, $events);
+        self::assertStringContainsString('En attente', $events->eq(0)->text());
+        self::assertStringContainsString('Accepté', $events->eq(1)->text());
+        self::assertCount(2, $events->filter('time[datetime]'));
+    }
+
+    // Verifies that all later statuses remain visible through delivery.
+    public function testCompleteTrackingHistoryEndsWithDeliveredStatus(): void
+    {
+        $trackedOrder = $this->createOrder(
+            $this->customer,
+            'Menu avec suivi',
+            new \DateTimeImmutable(),
+            new \DateTimeImmutable('+7 days'),
+            CustomerOrder::STATUS_PENDING,
+            '160.00',
+        );
+
+        $trackedOrder
+            ->setStatus(CustomerOrder::STATUS_CONFIRMED)
+            ->setStatus(CustomerOrder::STATUS_PREPARING)
+            ->setStatus(CustomerOrder::STATUS_READY)
+            ->setStatus(CustomerOrder::STATUS_OUT_FOR_DELIVERY)
+            ->setStatus(CustomerOrder::STATUS_DELIVERED);
+
+        $this->entityManager->flush();
+        $reference = $trackedOrder->getReference();
+
+        $this->client->loginUser($this->customer);
+        $crawler = $this->client->request(
+            'GET',
+            '/profile/orders/'.$trackedOrder->getId(),
+        );
+
+        self::assertResponseIsSuccessful();
+
+        $labels = $crawler
+            ->filter('.order-tracking__event strong')
+            ->each(static fn ($node): string => trim($node->text()));
+
+        self::assertSame([
+            'En attente',
+            'Accepté',
+            'En préparation',
+            'Prête',
+            'En cours de livraison',
+            'Delivered',
+        ], $labels);
+
+        $crawler = $this->client->request('GET', '/profile/orders');
+        $matchingRow = $crawler
+            ->filter('.order-table tbody tr')
+            ->reduce(
+                static fn ($node): bool => str_contains(
+                    $node->text(),
+                    (string) $reference,
+                ),
+            );
+
+        self::assertCount(1, $matchingRow);
+        self::assertStringContainsString('Delivered', $matchingRow->text());
     }
 
     private function createUser(

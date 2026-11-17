@@ -5,10 +5,11 @@
 {% block public_body %}
     {% set statusLabels = {
         pending: 'En attente',
-        confirmed: 'Confirmée',
+        confirmed: 'Accepté',
         preparing: 'En préparation',
         ready: 'Prête',
-        delivered: 'Livrée',
+        out_for_delivery: 'En cours de livraison',
+        delivered: 'Delivered',
         cancelled: 'Annulée'
     } %}
 
