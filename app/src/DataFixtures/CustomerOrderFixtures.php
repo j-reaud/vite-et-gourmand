@@ -61,7 +61,13 @@ final class CustomerOrderFixtures extends Fixture implements DependentFixtureInt
                 'orderedAt' => new \DateTimeImmutable('-35 days'),
                 'deliveryAt' => new \DateTimeImmutable('-30 days'),
                 'people' => 6,
-                'status' => CustomerOrder::STATUS_DELIVERED,
+                'statuses' => [
+                    CustomerOrder::STATUS_CONFIRMED,
+                    CustomerOrder::STATUS_PREPARING,
+                    CustomerOrder::STATUS_READY,
+                    CustomerOrder::STATUS_OUT_FOR_DELIVERY,
+                    CustomerOrder::STATUS_DELIVERED,
+                ],
                 'menuPrice' => '144.00',
                 'discount' => '10.00',
                 'deliveryCharge' => '15.00',
@@ -72,7 +78,10 @@ final class CustomerOrderFixtures extends Fixture implements DependentFixtureInt
                 'orderedAt' => new \DateTimeImmutable('-8 days'),
                 'deliveryAt' => new \DateTimeImmutable('+2 days'),
                 'people' => 8,
-                'status' => CustomerOrder::STATUS_PREPARING,
+                'statuses' => [
+                    CustomerOrder::STATUS_CONFIRMED,
+                    CustomerOrder::STATUS_PREPARING,
+                ],
                 'menuPrice' => '256.00',
                 'discount' => null,
                 'deliveryCharge' => '20.00',
@@ -83,7 +92,9 @@ final class CustomerOrderFixtures extends Fixture implements DependentFixtureInt
                 'orderedAt' => new \DateTimeImmutable('-2 days'),
                 'deliveryAt' => new \DateTimeImmutable('+7 days'),
                 'people' => 4,
-                'status' => CustomerOrder::STATUS_CONFIRMED,
+                'statuses' => [
+                    CustomerOrder::STATUS_CONFIRMED,
+                ],
                 'menuPrice' => '88.00',
                 'discount' => null,
                 'deliveryCharge' => '12.00',
@@ -109,7 +120,6 @@ final class CustomerOrderFixtures extends Fixture implements DependentFixtureInt
                 ->setOrderedAt($orderData['orderedAt'])
                 ->setDeliveryAt($orderData['deliveryAt'])
                 ->setNumberOfPeople($orderData['people'])
-                ->setStatus($orderData['status'])
                 ->setMenuPrice($orderData['menuPrice'])
                 ->setDiscountAmount($orderData['discount'])
                 ->setDeliveryCharge($orderData['deliveryCharge'])
@@ -117,6 +127,10 @@ final class CustomerOrderFixtures extends Fixture implements DependentFixtureInt
                 ->setDeliveryAddress(
                     '24 rue Sainte-Catherine, 33000 Bordeaux'
                 );
+
+            foreach ($orderData['statuses'] as $status) {
+                $order->setStatus($status);
+            }
 
             $manager->persist($order);
         }

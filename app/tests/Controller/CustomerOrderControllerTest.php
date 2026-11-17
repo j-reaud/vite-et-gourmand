@@ -197,7 +197,7 @@ final class CustomerOrderControllerTest extends WebTestCase
         );
         self::assertSelectorTextContains(
             '.order-status',
-            'Accepté'
+            'Acceptée'
         );
     }
 
@@ -340,7 +340,7 @@ final class CustomerOrderControllerTest extends WebTestCase
 
         self::assertCount(2, $events);
         self::assertStringContainsString('En attente', $events->eq(0)->text());
-        self::assertStringContainsString('Accepté', $events->eq(1)->text());
+        self::assertStringContainsString('Acceptée', $events->eq(1)->text());
         self::assertCount(2, $events->filter('time[datetime]'));
     }
 
@@ -380,11 +380,11 @@ final class CustomerOrderControllerTest extends WebTestCase
 
         self::assertSame([
             'En attente',
-            'Accepté',
+            'Acceptée',
             'En préparation',
             'Prête',
             'En cours de livraison',
-            'Delivered',
+            'Livrée',
         ], $labels);
 
         $crawler = $this->client->request('GET', '/profile/orders');
@@ -398,7 +398,7 @@ final class CustomerOrderControllerTest extends WebTestCase
             );
 
         self::assertCount(1, $matchingRow);
-        self::assertStringContainsString('Delivered', $matchingRow->text());
+        self::assertStringContainsString('Livrée', $matchingRow->text());
     }
 
     private function createUser(
