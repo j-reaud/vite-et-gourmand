@@ -68,6 +68,8 @@ final class EmployeeOrderController extends AbstractController
             );
         }
 
+        $agreedMenuPrice = $order->getMenuPrice();
+        $agreedNumberOfPeople = $order->getNumberOfPeople();
         $previousData = $this->createOrderSnapshot($order);
 
         $form = $this->createForm(
@@ -79,7 +81,11 @@ final class EmployeeOrderController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
-                $priceCalculator->recalculate($order);
+                $priceCalculator->recalculate(
+                    $order,
+                    $agreedMenuPrice,
+                    $agreedNumberOfPeople,
+                );
             } catch (DeliveryCalculationException $exception) {
                 $form->get('deliveryAddress')->addError(
                     new FormError($exception->getMessage()),

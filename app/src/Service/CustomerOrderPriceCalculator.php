@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\CustomerOrder;
+use App\Entity\Menu;
 
 final class CustomerOrderPriceCalculator
 {
@@ -11,17 +12,19 @@ final class CustomerOrderPriceCalculator
     ) {
     }
 
-    public function recalculate(CustomerOrder $order): void
-    {
-        $menu = $order->getMenu();
-        $minimumPeople = $menu?->getMinimumPeople();
-        $numberOfPeople = $order->getNumberOfPeople();
+    public function quote(
+        Menu $menu,
+        int $numberOfPeople,
+        string $deliveryAddress,
+        string $discountAmount = '0.00',
+        ?string $agreedMenuPrice = null,
+        ?int $agreedNumberOfPeople = null,
+    ): CustomerOrderPriceQuote {
+        $minimumPeople = $menu->getMinimumPeople();
 
         if (
-            $menu === null
-            || $minimumPeople === null
+            $minimumPeople === null
             || $minimumPeople < 1
-            || $numberOfPeople === null
             || $numberOfPeople < $minimumPeople
         ) {
             throw new \LogicException(
@@ -30,41 +33,72 @@ final class CustomerOrderPriceCalculator
         }
 
         $deliveryQuote = $this->deliveryCalculator->calculate(
-            (string) $order->getDeliveryAddress(),
+            $deliveryAddress,
         );
 
-        $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
-        $menuPriceInCents = (int) round(
-            ($basePriceInCents / $minimumPeople) * $numberOfPeople,
+        if (
+            $agreedMenuPrice !== null
+            && $agreedNumberOfPeople !== null
+            && $agreedNumberOfPeople > 0
+        ) {
+            $agreedPriceInCents = $this->amountToCents($agreedMenuPrice);
+            $menuPriceInCents = (int) round(
+                ($agreedPriceInCents / $agreedNumberOfPeople)
+                * $numberOfPeople,
+            );
+        } else {
+            $basePriceInCents = $this->amountToCents(
+                (string) $menu->getPrice(),
+            );
+            $menuPriceInCents = (int) round(
+                ($basePriceInCents / $minimumPeople) * $numberOfPeople,
+            );
+        }
+
+        $discountInCents = $this->amountToCents($discountAmount);
+
+        return new CustomerOrderPriceQuote(
+            menuPriceInCents: $menuPriceInCents,
+            discountInCents: $discountInCents,
+            deliveryQuote: $deliveryQuote,
         );
-        $discountInCents = (int) round(
-            (float) ($order->getDiscountAmount() ?? '0.00') * 100,
-        );
-        $totalInCents = max(
-            0,
-            $menuPriceInCents
-            + $deliveryQuote->getDeliveryFeeInCents()
-            - $discountInCents,
+    }
+
+    public function recalculate(
+        CustomerOrder $order,
+        ?string $agreedMenuPrice = null,
+        ?int $agreedNumberOfPeople = null,
+    ): CustomerOrderPriceQuote
+    {
+        $menu = $order->getMenu();
+        $numberOfPeople = $order->getNumberOfPeople();
+
+        if ($menu === null || $numberOfPeople === null) {
+            throw new \LogicException(
+                'Les informations de la commande sont invalides.',
+            );
+        }
+
+        $quote = $this->quote(
+            menu: $menu,
+            numberOfPeople: $numberOfPeople,
+            deliveryAddress: (string) $order->getDeliveryAddress(),
+            discountAmount: $order->getDiscountAmount() ?? '0.00',
+            agreedMenuPrice: $agreedMenuPrice,
+            agreedNumberOfPeople: $agreedNumberOfPeople,
         );
 
         $order
-            ->setMenuPrice(number_format(
-                $menuPriceInCents / 100,
-                2,
-                '.',
-                '',
-            ))
-            ->setDeliveryDistanceKm(
-                $deliveryQuote->getFormattedDistance(),
-            )
-            ->setDeliveryCharge(
-                $deliveryQuote->getFormattedDeliveryFee(),
-            )
-            ->setTotalPrice(number_format(
-                $totalInCents / 100,
-                2,
-                '.',
-                '',
-            ));
+            ->setMenuPrice($quote->getFormattedMenuPrice())
+            ->setDeliveryDistanceKm($quote->getFormattedDistance())
+            ->setDeliveryCharge($quote->getFormattedDeliveryFee())
+            ->setTotalPrice($quote->getFormattedTotal());
+
+        return $quote;
+    }
+
+    private function amountToCents(string $amount): int
+    {
+        return (int) round((float) $amount * 100);
     }
 }

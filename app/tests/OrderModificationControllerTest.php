@@ -106,6 +106,9 @@ final class OrderModificationControllerTest extends WebTestCase
         $this->entityManager->flush();
         $orderId = $order->getId();
 
+        $this->menu->setPrice('200.00');
+        $this->entityManager->flush();
+
         $this->client->loginUser($this->customer);
         $crawler = $this->client->request(
             'GET',
