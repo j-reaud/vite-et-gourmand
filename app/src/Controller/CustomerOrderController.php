@@ -6,9 +6,10 @@ use App\Entity\CustomerOrder;
 use App\Entity\Menu;
 use App\Entity\User;
 use App\Exception\DeliveryCalculationException;
+use App\Form\CustomerOrderEditFormType;
 use App\Form\OrderPlacementFormType;
 use App\Repository\CustomerOrderRepository;
-use App\Service\DeliveryCalculatorInterface;
+use App\Service\CustomerOrderPriceCalculator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -101,7 +102,7 @@ final class CustomerOrderController extends AbstractController
     public function deliveryQuote(
         Menu $menu,
         Request $request,
-        DeliveryCalculatorInterface $deliveryCalculator,
+        CustomerOrderPriceCalculator $priceCalculator,
     ): JsonResponse {
         $this->getAuthenticatedCustomer();
 
@@ -134,8 +135,10 @@ final class CustomerOrderController extends AbstractController
         }
 
         try {
-            $deliveryQuote = $deliveryCalculator->calculate(
-                $deliveryAddress,
+            $priceQuote = $priceCalculator->quote(
+                menu: $menu,
+                numberOfPeople: $numberOfPeople,
+                deliveryAddress: $deliveryAddress,
             );
         } catch (DeliveryCalculationException $exception) {
             return $this->json(
@@ -144,29 +147,12 @@ final class CustomerOrderController extends AbstractController
             );
         }
 
-        $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
-        $menuPriceInCents = (int) round(
-            ($basePriceInCents / $minimumPeople) * $numberOfPeople,
-        );
-        $totalInCents = $menuPriceInCents
-            + $deliveryQuote->getDeliveryFeeInCents();
-
         return $this->json([
-            'distanceKm' => $deliveryQuote->getFormattedDistance(),
-            'recognizedAddress' => $deliveryQuote->getRecognizedAddress(),
-            'menuPrice' => number_format(
-                $menuPriceInCents / 100,
-                2,
-                '.',
-                '',
-            ),
-            'deliveryCharge' => $deliveryQuote->getFormattedDeliveryFee(),
-            'totalPrice' => number_format(
-                $totalInCents / 100,
-                2,
-                '.',
-                '',
-            ),
+            'distanceKm' => $priceQuote->getFormattedDistance(),
+            'recognizedAddress' => $priceQuote->getRecognizedAddress(),
+            'menuPrice' => $priceQuote->getFormattedMenuPrice(),
+            'deliveryCharge' => $priceQuote->getFormattedDeliveryFee(),
+            'totalPrice' => $priceQuote->getFormattedTotal(),
         ]);
     }
 
@@ -175,7 +161,7 @@ final class CustomerOrderController extends AbstractController
         Menu $menu,
         Request $request,
         EntityManagerInterface $entityManager,
-        DeliveryCalculatorInterface $deliveryCalculator,
+        CustomerOrderPriceCalculator $priceCalculator,
     ): Response {
         $customer = $this->getAuthenticatedCustomer();
 
@@ -228,9 +214,7 @@ final class CustomerOrderController extends AbstractController
         }
 
         try {
-            $deliveryQuote = $deliveryCalculator->calculate(
-                (string) $order->getDeliveryAddress(),
-            );
+            $priceCalculator->recalculate($order);
         } catch (DeliveryCalculationException $exception) {
             $form->get('deliveryAddress')->addError(
                 new FormError($exception->getMessage()),
@@ -247,37 +231,8 @@ final class CustomerOrderController extends AbstractController
             );
         }
 
-        $numberOfPeople = $order->getNumberOfPeople();
-        $basePriceInCents = (int) round((float) $menu->getPrice() * 100);
-        $totalInCents = (int) round(
-            ($basePriceInCents / $minimumPeople) * $numberOfPeople,
-        );
-        $calculatedPrice = number_format(
-            $totalInCents / 100,
-            2,
-            '.',
-            '',
-        );
-        $deliveryFeeInCents = $deliveryQuote->getDeliveryFeeInCents();
-        $finalTotalInCents = $totalInCents + $deliveryFeeInCents;
-
         $order
-            ->setMenuPrice($calculatedPrice)
             ->setDiscountAmount('0.00')
-            ->setDeliveryDistanceKm(
-                $deliveryQuote->getFormattedDistance(),
-            )
-            ->setDeliveryCharge(
-                $deliveryQuote->getFormattedDeliveryFee(),
-            )
-            ->setTotalPrice(
-                number_format(
-                    $finalTotalInCents / 100,
-                    2,
-                    '.',
-                    '',
-                ),
-            )
             ->setStatus(CustomerOrder::STATUS_PENDING);
 
         $menu->setStock($menu->getStock() - 1);
@@ -295,6 +250,96 @@ final class CustomerOrderController extends AbstractController
         return $this->redirectToRoute('app_menu_show', [
             'slug' => $menu->getSlug(),
         ]);
+    }
+
+    #[Route(
+        '/{id}/edit',
+        name: 'edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST'],
+    )]
+    public function edit(
+        int $id,
+        Request $request,
+        CustomerOrderRepository $orderRepository,
+        CustomerOrderPriceCalculator $priceCalculator,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $customer = $this->getAuthenticatedCustomer();
+        $order = $orderRepository->findOneForCustomer($id, $customer);
+
+        if ($order === null) {
+            throw $this->createNotFoundException('Commande introuvable.');
+        }
+
+        if (!$order->isCustomerEditable()) {
+            $this->addFlash(
+                'order_edit_unavailable',
+                'Cette commande ne peut plus être modifiée.',
+            );
+
+            return $this->redirectToRoute('app_customer_order_show', [
+                'id' => $order->getId(),
+            ]);
+        }
+
+        $minimumPeople = $order->getMenu()?->getMinimumPeople();
+
+        if ($minimumPeople === null || $minimumPeople < 1) {
+            throw $this->createNotFoundException(
+                'Le nombre minimum de personnes est invalide.',
+            );
+        }
+
+        $agreedMenuPrice = $order->getMenuPrice();
+        $agreedNumberOfPeople = $order->getNumberOfPeople();
+
+        $form = $this->createForm(
+            CustomerOrderEditFormType::class,
+            $order,
+            ['minimum_people' => $minimumPeople],
+        );
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $priceCalculator->recalculate(
+                    $order,
+                    $agreedMenuPrice,
+                    $agreedNumberOfPeople,
+                );
+            } catch (DeliveryCalculationException $exception) {
+                $form->get('deliveryAddress')->addError(
+                    new FormError($exception->getMessage()),
+                );
+            }
+
+            if ($form->isValid()) {
+                $entityManager->flush();
+
+                $this->addFlash(
+                    'order_edit_success',
+                    'Votre commande a bien été modifiée.',
+                );
+
+                return $this->redirectToRoute('app_customer_order_show', [
+                    'id' => $order->getId(),
+                ]);
+            }
+        }
+
+        return $this->render(
+            'customer_order/edit.html.twig',
+            [
+                'order' => $order,
+                'editForm' => $form->createView(),
+            ],
+            new Response(
+                status: $form->isSubmitted()
+                    ? Response::HTTP_UNPROCESSABLE_ENTITY
+                    : Response::HTTP_OK,
+            ),
+        );
     }
 
     #[Route(

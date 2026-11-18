@@ -65,6 +65,18 @@
                     {% endif %}
                 </nav>
 
+                {% for message in app.flashes('order_edit_success') %}
+                    <div class="alert alert-success mb-0" role="status">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+
+                {% for message in app.flashes('order_edit_unavailable') %}
+                    <div class="alert alert-warning mb-0" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+
                 <div class="tab-content">
                     <div
                         class="tab-pane fade show active"
@@ -162,16 +174,27 @@
                                     ← Retour à mes commandes
                                 </a>
 
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-danger"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="{{ order.cancellable
-                                        ? '#cancelOrderModal'
-                                        : '#cancelUnavailableModal' }}"
-                                >
-                                    Annuler la commande
-                                </button>
+                                <div class="d-flex flex-column flex-sm-row gap-2">
+                                    {% if order.customerEditable %}
+                                        <a
+                                            class="btn btn-primary"
+                                            href="{{ path('app_customer_order_edit', {id: order.id}) }}"
+                                        >
+                                            Modifier la commande
+                                        </a>
+                                    {% endif %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="{{ order.cancellable
+                                            ? '#cancelOrderModal'
+                                            : '#cancelUnavailableModal' }}"
+                                    >
+                                        Annuler la commande
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
