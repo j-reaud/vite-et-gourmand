@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\OrderStatusHistory;
 use App\Repository\CustomerOrderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -115,10 +116,22 @@ class CustomerOrder
     #[ORM\OrderBy(['changedAt' => 'ASC', 'id' => 'ASC'])]
     private Collection $orderStatusHistories;
 
+    /**
+     * @var Collection<int, OrderModification>
+     */
+    #[ORM\OneToMany(
+        targetEntity: OrderModification::class,
+        mappedBy: 'customerOrder',
+        cascade: ['persist', 'remove'],
+    )]
+    #[ORM\OrderBy(['modifiedAt' => 'DESC', 'id' => 'DESC'])]
+    private Collection $orderModifications;
+
     public function __construct()
     {
         $this->orderStatusHistories = new ArrayCollection();
         $this->recordStatusChange(self::STATUS_PENDING);
+        $this->orderModifications = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -229,6 +242,21 @@ class CustomerOrder
     public function isCancellable(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isCustomerEditable(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isEmployeeEditable(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_PENDING,
+            self::STATUS_CONFIRMED,
+            self::STATUS_PREPARING,
+            self::STATUS_READY,
+        ], true);
     }
 
     public function isTrackingAvailable(): bool
@@ -347,6 +375,36 @@ class CustomerOrder
             // set the owning side to null (unless already changed)
             if ($orderStatusHistory->getCustomerOrder() === $this) {
                 $orderStatusHistory->setCustomerOrder(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrderModification>
+     */
+    public function getOrderModifications(): Collection
+    {
+        return $this->orderModifications;
+    }
+
+    public function addOrderModification(OrderModification $orderModification): static
+    {
+        if (!$this->orderModifications->contains($orderModification)) {
+            $this->orderModifications->add($orderModification);
+            $orderModification->setCustomerOrder($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrderModification(OrderModification $orderModification): static
+    {
+        if ($this->orderModifications->removeElement($orderModification)) {
+            // set the owning side to null (unless already changed)
+            if ($orderModification->getCustomerOrder() === $this) {
+                $orderModification->setCustomerOrder(null);
             }
         }
 

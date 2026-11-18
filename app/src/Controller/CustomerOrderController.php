@@ -6,8 +6,10 @@ use App\Entity\CustomerOrder;
 use App\Entity\Menu;
 use App\Entity\User;
 use App\Exception\DeliveryCalculationException;
+use App\Form\CustomerOrderEditFormType;
 use App\Form\OrderPlacementFormType;
 use App\Repository\CustomerOrderRepository;
+use App\Service\CustomerOrderPriceCalculator;
 use App\Service\DeliveryCalculatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -295,6 +297,89 @@ final class CustomerOrderController extends AbstractController
         return $this->redirectToRoute('app_menu_show', [
             'slug' => $menu->getSlug(),
         ]);
+    }
+
+    #[Route(
+        '/{id}/edit',
+        name: 'edit',
+        requirements: ['id' => '\d+'],
+        methods: ['GET', 'POST'],
+    )]
+    public function edit(
+        int $id,
+        Request $request,
+        CustomerOrderRepository $orderRepository,
+        CustomerOrderPriceCalculator $priceCalculator,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        $customer = $this->getAuthenticatedCustomer();
+        $order = $orderRepository->findOneForCustomer($id, $customer);
+
+        if ($order === null) {
+            throw $this->createNotFoundException('Commande introuvable.');
+        }
+
+        if (!$order->isCustomerEditable()) {
+            $this->addFlash(
+                'order_edit_unavailable',
+                'Cette commande ne peut plus être modifiée.',
+            );
+
+            return $this->redirectToRoute('app_customer_order_show', [
+                'id' => $order->getId(),
+            ]);
+        }
+
+        $minimumPeople = $order->getMenu()?->getMinimumPeople();
+
+        if ($minimumPeople === null || $minimumPeople < 1) {
+            throw $this->createNotFoundException(
+                'Le nombre minimum de personnes est invalide.',
+            );
+        }
+
+        $form = $this->createForm(
+            CustomerOrderEditFormType::class,
+            $order,
+            ['minimum_people' => $minimumPeople],
+        );
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            try {
+                $priceCalculator->recalculate($order);
+            } catch (DeliveryCalculationException $exception) {
+                $form->get('deliveryAddress')->addError(
+                    new FormError($exception->getMessage()),
+                );
+            }
+
+            if ($form->isValid()) {
+                $entityManager->flush();
+
+                $this->addFlash(
+                    'order_edit_success',
+                    'Votre commande a bien été modifiée.',
+                );
+
+                return $this->redirectToRoute('app_customer_order_show', [
+                    'id' => $order->getId(),
+                ]);
+            }
+        }
+
+        return $this->render(
+            'customer_order/edit.html.twig',
+            [
+                'order' => $order,
+                'editForm' => $form->createView(),
+            ],
+            new Response(
+                status: $form->isSubmitted()
+                    ? Response::HTTP_UNPROCESSABLE_ENTITY
+                    : Response::HTTP_OK,
+            ),
+        );
     }
 
     #[Route(
