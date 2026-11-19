@@ -32,6 +32,8 @@ final class MenuFixtures extends Fixture
                 'theme' => 'Événement',
                 'diet' => 'Classique',
                 'stock' => 2,
+                'specialConditions' => 'Prévoir un espace réfrigéré pour '
+                    .'conserver le menu jusqu’au moment du service.',
             ],
             [
                 'title' => 'Jardin gourmand',
@@ -90,6 +92,9 @@ final class MenuFixtures extends Fixture
                 ->setTheme($menuData['theme'])
                 ->setDiet($menuData['diet'])
                 ->setStock($menuData['stock'])
+                ->setSpecialConditions(
+                    $menuData['specialConditions'] ?? null,
+                )
                 ->setIsPublished(true);
 
             $manager->persist($menu);

@@ -274,6 +274,7 @@
 {% endif %}
 
 {% set orderSuccessMessages = app.flashes('order_success') %}
+{% set orderEmailWarnings = app.flashes('order_email_warning') %}
 
 {% if orderSuccessMessages is not empty %}
     <div
@@ -304,6 +305,12 @@
                 <div class="modal-body">
                     {% for message in orderSuccessMessages %}
                         <div class="alert alert-success mb-0" role="status">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    {% for message in orderEmailWarnings %}
+                        <div class="alert alert-warning mt-3 mb-0" role="alert">
                             {{ message }}
                         </div>
                     {% endfor %}

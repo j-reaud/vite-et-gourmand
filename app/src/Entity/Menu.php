@@ -67,6 +67,9 @@ class Menu
     #[ORM\Column]
     private bool $isPublished = false;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $specialConditions = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -188,6 +191,18 @@ class Menu
     public function setIsPublished(bool $isPublished): static
     {
         $this->isPublished = $isPublished;
+
+        return $this;
+    }
+
+    public function getSpecialConditions(): ?string
+    {
+        return $this->specialConditions;
+    }
+
+    public function setSpecialConditions(?string $specialConditions): static
+    {
+        $this->specialConditions = $specialConditions;
 
         return $this;
     }

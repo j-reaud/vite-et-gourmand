@@ -1,0 +1,195 @@
+{% apply inline_css(source('@styles/emails/account.css')) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de votre commande {{ order.reference }}</title>
+</head>
+
+<body class="email-body">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-background">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-shell">
+                    <tr>
+                        <td class="email-header">
+                            <span class="email-brand">Vite &amp; Gourmand</span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-content">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td class="email-eyebrow">Confirmation de commande</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-title">
+                                        Votre commande a bien été enregistrée
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Bonjour {{ order.customer.firstName }},
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Nous avons bien reçu votre commande
+                                        <strong>{{ order.reference }}</strong>.
+                                        Nos équipes vont maintenant l’étudier.
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-details">
+                                <tr>
+                                    <td colspan="2" class="email-section-title">
+                                        Commande
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Référence</td>
+                                    <td class="email-detail-value">{{ order.reference }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Enregistrée le</td>
+                                    <td class="email-detail-value">
+                                        {{ order.orderedAt|date('d/m/Y à H:i') }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Client</td>
+                                    <td class="email-detail-value">{{ order.customer.firstName }} {{ order.customer.lastName }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Téléphone</td>
+                                    <td class="email-detail-value">
+                                        {{ order.customer.phone }}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-details">
+                                <tr>
+                                    <td colspan="2" class="email-section-title">
+                                        Prestation
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Menu</td>
+                                    <td class="email-detail-value">{{ order.menuName }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Quantité</td>
+                                    <td class="email-detail-value">1 menu</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Nombre de convives</td>
+                                    <td class="email-detail-value">
+                                        {{ order.numberOfPeople }}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-details">
+                                <tr>
+                                    <td colspan="2" class="email-section-title">
+                                        Tarification
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Prix du menu</td>
+                                    <td class="email-detail-value">
+                                        {{ order.menuPrice|number_format(2, ',', ' ') }} €
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Frais de livraison</td>
+                                    <td class="email-detail-value">
+                                        {{ order.deliveryCharge|number_format(2, ',', ' ') }} €
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Réduction</td>
+                                    <td class="email-detail-value">
+                                        {{ (order.discountAmount ?? 0)|number_format(2, ',', ' ') }} €
+                                    </td>
+                                </tr>
+                                <tr class="email-total-row">
+                                    <td class="email-detail-label">Total</td>
+                                    <td class="email-detail-value">
+                                        {{ order.totalPrice|number_format(2, ',', ' ') }} €
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-details">
+                                <tr>
+                                    <td colspan="2" class="email-section-title">
+                                        Livraison
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Adresse</td>
+                                    <td class="email-detail-value">
+                                        {{ order.deliveryAddress }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Date</td>
+                                    <td class="email-detail-value">
+                                        {{ order.deliveryAt|date('d/m/Y') }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Heure souhaitée</td>
+                                    <td class="email-detail-value">
+                                        {{ order.deliveryAt|date('H:i') }}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {% if order.menu.specialConditions %}
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-notice">
+                                    <tr>
+                                        <td>
+                                            <strong>Conditions particulières</strong><br>
+                                            {{ order.menu.specialConditions|nl2br }}
+                                        </td>
+                                    </tr>
+                                </table>
+                            {% endif %}
+
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td class="email-button-cell">
+                                        <a
+                                            href="{{ url('app_customer_order_show', {id: order.id}) }}"
+                                            class="email-button"
+                                        >
+                                            Voir ma commande
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-footer">
+                            À bientôt,<br>
+                            L’équipe Vite &amp; Gourmand
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+{% endapply %}

@@ -10,8 +10,10 @@ use App\Repository\MenuRepository;
 use App\Repository\UserRepository;
 use App\Tests\Double\FakeDeliveryCalculator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 final class OrderPlacementControllerTest extends WebTestCase
 {
@@ -65,7 +67,10 @@ final class OrderPlacementControllerTest extends WebTestCase
             ->setTheme('Classique')
             ->setDiet('Classique')
             ->setStock(10)
-            ->setIsPublished(true);
+            ->setIsPublished(true)
+            ->setSpecialConditions(
+                'Conserver au frais jusqu’au moment du service.',
+            );
 
         $this->entityManager->persist($this->menu);
         $this->entityManager->flush();
@@ -210,9 +215,12 @@ final class OrderPlacementControllerTest extends WebTestCase
         );
 
         self::assertResponseRedirects('/menus/menu-de-commande');
+        self::assertEmailCount(1);
+
+        $email = self::getMailerMessage();
+        self::assertInstanceOf(TemplatedEmail::class, $email);
 
         $this->client->followRedirect();
-
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains(
             '#orderSuccessModal',
@@ -238,6 +246,64 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertSame(
             '10 rue de la Paix, 33000 Bordeaux',
             $order->getDeliveryAddress(),
+        );
+
+        self::assertEmailAddressContains(
+            $email,
+            'To',
+            'customer-order@example.com',
+        );
+        self::assertEmailSubjectContains(
+            $email,
+            'Confirmation de votre commande '.$order->getReference(),
+        );
+        self::assertEmailHtmlBodyContains(
+            $email,
+            (string) $order->getReference(),
+        );
+        self::assertEmailHtmlBodyContains(
+            $email,
+            $order->getOrderedAt()?->format('d/m/Y à H:i') ?? '',
+        );
+        self::assertEmailHtmlBodyContains($email, 'Camille Martin');
+        self::assertEmailHtmlBodyContains($email, '0612345678');
+        self::assertEmailHtmlBodyContains($email, 'Menu de commande');
+        self::assertEmailHtmlBodyContains($email, '1 menu');
+        self::assertEmailHtmlBodyContains($email, '180,00 €');
+        self::assertEmailHtmlBodyContains($email, '5,00 €');
+        self::assertEmailHtmlBodyContains($email, '185,00 €');
+        self::assertEmailHtmlBodyContains(
+            $email,
+            '10 rue de la Paix, 33000 Bordeaux',
+        );
+        self::assertEmailHtmlBodyContains(
+            $email,
+            $deliveryAt->format('d/m/Y'),
+        );
+        self::assertEmailHtmlBodyContains(
+            $email,
+            $deliveryAt->format('H:i'),
+        );
+        self::assertEmailHtmlBodyContains(
+            $email,
+            'Conserver au frais jusqu’au moment du service.',
+        );
+
+        $emailCrawler = new Crawler((string) $email->getHtmlBody());
+
+        self::assertSame(
+            '6',
+            trim($emailCrawler->filterXPath(
+                '//td[contains(normalize-space(.), "Nombre de convives")]'
+                .'/following-sibling::td[1]',
+            )->text()),
+        );
+        self::assertSame(
+            '0,00 €',
+            trim($emailCrawler->filterXPath(
+                '//td[contains(normalize-space(.), "Réduction")]'
+                .'/following-sibling::td[1]',
+            )->text()),
         );
 
         $menu = $this->menuRepository->findOneBy([
