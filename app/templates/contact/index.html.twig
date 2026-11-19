@@ -45,6 +45,7 @@
 
                     {{ form_start(contactForm, {attr: {class: 'contact-form'}}) }}
                         {{ form_errors(contactForm) }}
+                        {{ form_row(contactForm.website) }}
 
                         <div class="contact-form__row">
                             {{ form_row(contactForm.firstName, {
@@ -68,6 +69,11 @@
                             }) }}
                         </div>
 
+                        {{ form_row(contactForm.subject, {
+                            label: 'Sujet *',
+                            attr: {class: 'form-control'}
+                        }) }}
+
                         {{ form_row(contactForm.message, {
                             label: 'Message *',
                             attr: {class: 'form-control'}
@@ -90,6 +96,7 @@
             aria-labelledby="contactSuccessModalLabel"
             aria-hidden="true"
             data-controller="contact-success"
+            data-turbo-temporary
         >
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content contact-success-modal">
@@ -97,7 +104,11 @@
                         <span class="contact-success-modal__icon" aria-hidden="true">✓</span>
                         <h2 id="contactSuccessModalLabel">Message envoyé</h2>
                         <p>Votre message a bien été transmis à notre équipe. Nous vous répondrons dans les meilleurs délais.</p>
-                        <a class="button button--primary" href="{{ path('app_home') }}">OK</a>
+                        <a
+                            class="button button--primary"
+                            href="{{ path('app_home') }}"
+                            data-action="contact-success#closeBeforeNavigation"
+                        >OK</a>
                     </div>
                 </div>
             </div>

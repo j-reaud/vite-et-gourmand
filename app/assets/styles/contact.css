@@ -77,6 +77,16 @@
     margin-top: 1.75rem;
 }
 
+.contact-form__honeypot {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+}
+
 .contact-form__row {
     display: grid;
     gap: 1rem;

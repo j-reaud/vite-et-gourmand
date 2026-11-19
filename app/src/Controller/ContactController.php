@@ -29,15 +29,17 @@ final class ContactController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ('' !== trim((string) $form->get('website')->getData())) {
+                $this->addFlash('contact_success', true);
+
+                return $this->redirectToRoute('app_contact');
+            }
+
             $email = (new TemplatedEmail())
                 ->from('no-reply@vite-et-gourmand.fr')
                 ->to($contactEmail)
                 ->replyTo($contactRequest->getEmail())
-                ->subject(sprintf(
-                    'Demande de contact de %s %s',
-                    $contactRequest->getFirstName(),
-                    $contactRequest->getLastName(),
-                ))
+                ->subject(sprintf('Demande de contact : %s', $contactRequest->getSubject()))
                 ->htmlTemplate('emails/contact_request.html.twig')
                 ->context(['contact' => $contactRequest]);
 

@@ -46,6 +46,25 @@ final class ContactFormType extends AbstractType
                     'inputmode' => 'tel',
                 ],
             ])
+            ->add('website', TextType::class, [
+                'label' => 'Site internet',
+                'mapped' => false,
+                'required' => false,
+                'attr' => [
+                    'autocomplete' => 'off',
+                    'tabindex' => '-1',
+                ],
+                'row_attr' => [
+                    'class' => 'contact-form__honeypot',
+                    'aria-hidden' => 'true',
+                ],
+            ])
+            ->add('subject', TextType::class, [
+                'label' => 'Sujet',
+                'attr' => [
+                    'maxlength' => 150,
+                ],
+            ])
             ->add('message', TextareaType::class, [
                 'label' => 'Message',
                 'attr' => [

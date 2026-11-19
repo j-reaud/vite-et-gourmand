@@ -32,6 +32,13 @@ final class ContactRequest
     )]
     private string $phone = '';
 
+    #[Assert\NotBlank(message: 'Veuillez saisir le sujet de votre demande.')]
+    #[Assert\Length(
+        max: 150,
+        maxMessage: 'Le sujet ne peut pas dépasser {{ limit }} caractères.',
+    )]
+    private string $subject = '';
+
     #[Assert\NotBlank(message: 'Veuillez saisir votre message.')]
     #[Assert\Length(
         max: 240,
@@ -95,6 +102,18 @@ final class ContactRequest
     public function setMessage(string $message): self
     {
         $this->message = trim($message);
+
+        return $this;
+    }
+
+    public function getSubject(): string
+    {
+        return $this->subject;
+    }
+
+    public function setSubject(string $subject): self
+    {
+        $this->subject = trim($subject);
 
         return $this;
     }

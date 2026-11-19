@@ -29,6 +29,7 @@ final class ContactControllerTest extends WebTestCase
             'contact_form[lastName]' => 'Martin',
             'contact_form[email]' => 'camille@example.com',
             'contact_form[phone]' => '06 12 34 56 78',
+            'contact_form[subject]' => 'Organisation d’un anniversaire',
             'contact_form[message]' => 'Je souhaite organiser un repas pour un anniversaire.',
         ]);
 
@@ -39,7 +40,11 @@ final class ContactControllerTest extends WebTestCase
         self::assertNotNull($email);
         self::assertEmailAddressContains($email, 'To', 'bonjour@viteetgourmand.fr');
         self::assertEmailAddressContains($email, 'Reply-To', 'camille@example.com');
-        self::assertEmailSubjectContains($email, 'Demande de contact de Camille Martin');
+        self::assertEmailSubjectContains(
+            $email,
+            'Demande de contact : Organisation d’un anniversaire',
+        );
+        self::assertEmailHtmlBodyContains($email, 'Organisation d’un anniversaire');
         self::assertEmailHtmlBodyContains($email, '06 12 34 56 78');
         self::assertEmailHtmlBodyContains(
             $email,
@@ -63,6 +68,7 @@ final class ContactControllerTest extends WebTestCase
             'contact_form[lastName]' => 'Martin',
             'contact_form[email]' => 'camille@example.com',
             'contact_form[phone]' => '06 12 34 56 78',
+            'contact_form[subject]' => 'Organisation d’un anniversaire',
             'contact_form[message]' => str_repeat('a', 241),
         ]);
 
@@ -71,6 +77,26 @@ final class ContactControllerTest extends WebTestCase
             '.invalid-feedback',
             'Le message ne peut pas dépasser 240 caractères.',
         );
+        self::assertEmailCount(0);
+    }
+
+    // Verifies that bots filling the hidden honeypot do not trigger an email.
+    public function testHoneypotSilentlyRejectsAutomatedSubmission(): void
+    {
+        $client = static::createClient();
+        $client->request('GET', '/contact');
+
+        $client->submitForm('Envoyer', [
+            'contact_form[firstName]' => 'Robot',
+            'contact_form[lastName]' => 'Spam',
+            'contact_form[email]' => 'robot@example.com',
+            'contact_form[phone]' => '06 12 34 56 78',
+            'contact_form[website]' => 'https://spam.example.com',
+            'contact_form[subject]' => 'Publicité automatisée',
+            'contact_form[message]' => 'Message automatisé.',
+        ]);
+
+        self::assertResponseRedirects('/contact');
         self::assertEmailCount(0);
     }
 
