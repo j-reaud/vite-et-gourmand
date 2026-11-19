@@ -10,8 +10,10 @@ use App\Repository\MenuRepository;
 use App\Repository\UserRepository;
 use App\Tests\Double\FakeDeliveryCalculator;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 final class OrderPlacementControllerTest extends WebTestCase
 {
@@ -216,6 +218,7 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertEmailCount(1);
 
         $email = self::getMailerMessage();
+        self::assertInstanceOf(TemplatedEmail::class, $email);
 
         $this->client->followRedirect();
         self::assertResponseIsSuccessful();
@@ -266,10 +269,8 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertEmailHtmlBodyContains($email, '0612345678');
         self::assertEmailHtmlBodyContains($email, 'Menu de commande');
         self::assertEmailHtmlBodyContains($email, '1 menu');
-        self::assertEmailHtmlBodyContains($email, '6');
         self::assertEmailHtmlBodyContains($email, '180,00 €');
         self::assertEmailHtmlBodyContains($email, '5,00 €');
-        self::assertEmailHtmlBodyContains($email, '0,00 €');
         self::assertEmailHtmlBodyContains($email, '185,00 €');
         self::assertEmailHtmlBodyContains(
             $email,
@@ -286,6 +287,23 @@ final class OrderPlacementControllerTest extends WebTestCase
         self::assertEmailHtmlBodyContains(
             $email,
             'Conserver au frais jusqu’au moment du service.',
+        );
+
+        $emailCrawler = new Crawler((string) $email->getHtmlBody());
+
+        self::assertSame(
+            '6',
+            trim($emailCrawler->filterXPath(
+                '//td[contains(normalize-space(.), "Nombre de convives")]'
+                .'/following-sibling::td[1]',
+            )->text()),
+        );
+        self::assertSame(
+            '0,00 €',
+            trim($emailCrawler->filterXPath(
+                '//td[contains(normalize-space(.), "Réduction")]'
+                .'/following-sibling::td[1]',
+            )->text()),
         );
 
         $menu = $this->menuRepository->findOneBy([
