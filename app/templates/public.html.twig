@@ -29,7 +29,7 @@
                     <li><a{% if currentRoute == 'app_home' %} class="active"{% endif %} href="{{ path('app_home') }}">Accueil</a></li>
                     <li><a{% if currentRoute starts with 'app_menu' %} class="active"{% endif %} href="{{ path('app_menu') }}">Nos menus</a></li>
                     <li><a href="{{ path('app_home') }}#histoire">À propos</a></li>
-                    <li><a href="{{ path('app_home') }}#contact">Contact</a></li>
+                    <li><a{% if currentRoute == 'app_contact' %} class="active"{% endif %} href="{{ path('app_contact') }}">Contact</a></li>
                 </ul>
 
                 <div class="home-nav__account">
@@ -67,7 +67,7 @@
                 <div>
                     <h2>Votre commande</h2>
                     <a href="{{ path('app_menu') }}">Commander</a>
-                    <a href="mailto:bonjour@viteetgourmand.fr">Demander un devis</a>
+                    <a href="{{ path('app_contact') }}">Demander un devis</a>
                     <a href="{{ path('app_login') }}">Se connecter</a>
                 </div>
                 <div>

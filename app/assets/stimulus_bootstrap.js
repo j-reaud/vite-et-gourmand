@@ -8,6 +8,7 @@ import ProfileEditorController from './controllers/profile_editor_controller.js'
 import OrderFiltersController from './controllers/order_filters_controller.js';
 import OrderPlacementController from './controllers/order_placement_controller.js';
 import EmployeeCreateModalController from './controllers/employee_create_modal_controller.js';
+import ContactSuccessController from './controllers/contact_success_controller.js';
 
 // Boots the Stimulus application for this page.
 const app = startStimulusApp();
@@ -20,3 +21,4 @@ app.register('profile-editor', ProfileEditorController);
 app.register('order-filters', OrderFiltersController);
 app.register('order-placement', OrderPlacementController);
 app.register('employee-create-modal', EmployeeCreateModalController);
+app.register('contact-success', ContactSuccessController);
