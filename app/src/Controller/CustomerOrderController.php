@@ -245,8 +245,11 @@ final class CustomerOrderController extends AbstractController
         $entityManager->persist($order);
         $entityManager->flush();
 
+        $emailSent = false;
+
         try {
             $orderConfirmationMailer->send($order);
+            $emailSent = true;
         } catch (TransportExceptionInterface $exception) {
             $logger->error(
                 'The order confirmation email could not be sent.',
@@ -267,7 +270,9 @@ final class CustomerOrderController extends AbstractController
         $this->addFlash(
             'order_success',
             'Votre commande a bien été transmise à nos équipes. '
-            .'Un e-mail récapitulatif vous a été envoyé.',
+            .($emailSent
+                ? 'Un e-mail récapitulatif vous a été envoyé.'
+                : ''),
         );
 
         return $this->redirectToRoute('app_menu_show', [
