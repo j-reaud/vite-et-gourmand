@@ -87,7 +87,7 @@ final class AdminController extends AbstractController
                     }
 
                     $newEmployee->setEmployeeNumber(sprintf(
-                        'EMP-%06d',
+                        'VG-EMP-%06d',
                         $employeeId,
                     ));
                 },

@@ -105,7 +105,7 @@ class EmployeeAccountControllerTest extends WebTestCase
         self::assertSame('Martin', $employee->getLastName());
         self::assertSame('0612345678', $employee->getPhone());
         self::assertMatchesRegularExpression(
-            '/^EMP-\d{6}$/',
+            '/^VG-EMP-\d{6}$/',
             (string) $employee->getEmployeeNumber(),
         );
         self::assertContains('ROLE_EMPLOYEE', $employee->getRoles());

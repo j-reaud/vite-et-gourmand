@@ -214,7 +214,6 @@ class EmployeeDeactivationControllerTest extends WebTestCase
             $formName.'[lastName]' => 'Durand',
             $formName.'[email]' => 'jeanne.durand@example.com',
             $formName.'[phone]' => '0698765432',
-            $formName.'[employeeNumber]' => 'EMP-002',
         ]);
 
         self::assertResponseRedirects('/admin/employees');
@@ -231,61 +230,49 @@ class EmployeeDeactivationControllerTest extends WebTestCase
             $employee->getEmail()
         );
         self::assertSame('0698765432', $employee->getPhone());
-        self::assertSame('EMP-002', $employee->getEmployeeNumber());
+        self::assertSame('EMP-001', $employee->getEmployeeNumber());
         self::assertSame($originalPassword, $employee->getPassword());
         self::assertContains('ROLE_EMPLOYEE', $employee->getRoles());
         self::assertTrue($employee->isActive());
     }
 
-    public function testDuplicateEmployeeNumberEditShowsSpecificError(): void
+    // Verifies that the system-owned employee number cannot be edited.
+    public function testEmployeeNumberCannotBeEdited(): void
     {
-        $secondEmployee = (new User())
-            ->setFirstName('Jean')
-            ->setLastName('Dupont')
-            ->setEmail('second.employee@example.com')
-            ->setPhone('0600000000')
-            ->setEmployeeNumber('EMP-002')
-            ->setRoles(['ROLE_EMPLOYEE'])
-            ->setIsActive(true)
-            ->setPassword('hashed-password');
-
-        $this->entityManager->persist($secondEmployee);
-        $this->entityManager->flush();
-
-        $secondEmployeeId = $secondEmployee->getId();
-        $formName = 'employee_edit_'.$secondEmployeeId;
+        $employeeId = $this->employee->getId();
+        $formName = 'employee_edit_'.$employeeId;
 
         $this->client->loginUser($this->administrator, 'admin');
         $crawler = $this->client->request('GET', '/admin/employees');
+
+        self::assertCount(
+            0,
+            $crawler->filter(
+                sprintf(
+                    'input[name="%s[employeeNumber]"]',
+                    $formName,
+                ),
+            ),
+        );
+
         $form = $crawler
-            ->filter('#employee-edit-modal-'.$secondEmployeeId.' form')
+            ->filter('#employee-edit-modal-'.$employeeId.' form')
             ->form([
-                $formName.'[firstName]' => 'Jean',
-                $formName.'[lastName]' => 'Dupont',
-                $formName.'[email]' => 'second.employee@example.com',
-                $formName.'[phone]' => '0600000000',
-                $formName.'[employeeNumber]' => 'EMP-001',
+                $formName.'[firstName]' => 'Jeanne',
+                $formName.'[lastName]' => 'Martin',
+                $formName.'[email]' => 'employee@example.com',
+                $formName.'[phone]' => '0612345678',
             ]);
 
         $this->client->submit($form);
 
         self::assertResponseRedirects('/admin/employees');
 
-        $this->client->followRedirect();
-
-        self::assertSelectorTextContains(
-            '[role="alert"]',
-            'Ce numéro d’employé est déjà utilisé.'
-        );
-
         $this->entityManager->clear();
 
-        $secondEmployee = $this->userRepository->find($secondEmployeeId);
+        $employee = $this->userRepository->find($employeeId);
 
-        self::assertInstanceOf(User::class, $secondEmployee);
-        self::assertSame(
-            'EMP-002',
-            $secondEmployee->getEmployeeNumber()
-        );
+        self::assertInstanceOf(User::class, $employee);
+        self::assertSame('EMP-001', $employee->getEmployeeNumber());
     }
 }
