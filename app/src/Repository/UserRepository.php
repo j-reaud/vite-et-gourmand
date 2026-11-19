@@ -51,6 +51,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ;
     }
 
+    public function countActiveEmployees(): int
+    {
+        return (int) $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne(
+                'SELECT COUNT(*) FROM user
+                WHERE JSON_CONTAINS(roles, :employeeRole) = 1
+                AND is_active = 1',
+                [
+                    'employeeRole' => json_encode(
+                        'ROLE_EMPLOYEE',
+                        JSON_THROW_ON_ERROR,
+                    ),
+                ],
+            );
+    }
+
     /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */

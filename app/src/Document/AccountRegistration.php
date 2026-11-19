@@ -6,15 +6,14 @@ use DateTimeImmutable;
 use Doctrine\ODM\MongoDB\Mapping\Attribute as ODM;
 
 #[ODM\Document]
-#[ODM\Index(keys: ['userId' => 'asc'], unique: true)]
 #[ODM\Index(keys: ['accountType' => 'asc', 'registeredAt' => 'asc'])]
 class AccountRegistration
 {
     public const TYPE_CUSTOMER = 'customer';
     public const TYPE_EMPLOYEE = 'employee';
 
-    #[ODM\Id]
-    private ?string $id = null;
+    #[ODM\Id(type: 'string', strategy: 'NONE')]
+    private string $id;
 
     #[ODM\Field(type: 'int')]
     private int $userId;
@@ -22,21 +21,25 @@ class AccountRegistration
     #[ODM\Field(type: 'string')]
     private string $accountType;
 
-    #[ODM\Field(type: 'date_immutable')]
-    private DateTimeImmutable $registeredAt;
+    #[ODM\Field(type: 'date_immutable', nullable: true)]
+    private ?DateTimeImmutable $registeredAt;
 
-    public function __construct(int $userId, string $accountType, DateTimeImmutable $registeredAt)
-    {
+    public function __construct(
+        int $userId,
+        string $accountType,
+        ?DateTimeImmutable $registeredAt,
+    ) {
         if (!in_array($accountType, [self::TYPE_CUSTOMER, self::TYPE_EMPLOYEE], true)) {
             throw new \InvalidArgumentException('Unsupported account type.');
         }
 
+        $this->id = (string) $userId;
         $this->userId = $userId;
         $this->accountType = $accountType;
         $this->registeredAt = $registeredAt;
     }
 
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }
@@ -51,7 +54,7 @@ class AccountRegistration
         return $this->accountType;
     }
 
-    public function getRegisteredAt(): DateTimeImmutable
+    public function getRegisteredAt(): ?DateTimeImmutable
     {
         return $this->registeredAt;
     }

@@ -9,7 +9,7 @@ use App\Form\EmployeeEditFormType;
 use App\Repository\CustomerOrderRepository;
 use App\Repository\UserRepository;
 use App\Service\AccountKpiService;
-use App\Service\AccountRegistrationRecorder;
+use App\Service\AccountRegistrationDispatcher;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -52,7 +52,7 @@ final class AdminController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         MailerInterface $mailer,
         LoggerInterface $logger,
-        AccountRegistrationRecorder $registrationRecorder,
+        AccountRegistrationDispatcher $registrationDispatcher,
     ): Response {
         $newEmployee = new User();
         $employeeForm = $this->createForm(
@@ -105,7 +105,7 @@ final class AdminController extends AbstractController
                 },
             );
 
-            $registrationRecorder->record(
+            $registrationDispatcher->dispatch(
                 $newEmployee,
                 AccountRegistration::TYPE_EMPLOYEE,
             );

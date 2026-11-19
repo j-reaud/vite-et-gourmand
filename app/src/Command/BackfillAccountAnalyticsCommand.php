@@ -28,8 +28,9 @@ final class BackfillAccountAnalyticsCommand
 
         foreach ($this->userRepository->findAll() as $user) {
             $roles = $user->getRoles();
+            $userId = $user->getId();
 
-            if (in_array('ROLE_ADMIN', $roles, true)) {
+            if ($userId === null || in_array('ROLE_ADMIN', $roles, true)) {
                 continue;
             }
 
@@ -37,9 +38,14 @@ final class BackfillAccountAnalyticsCommand
                 ? AccountRegistration::TYPE_EMPLOYEE
                 : AccountRegistration::TYPE_CUSTOMER;
 
-            if ($this->registrationRecorder->record($user, $accountType)) {
+            try {
+                $this->registrationRecorder->record(
+                    $userId,
+                    $accountType,
+                    null,
+                );
                 ++$synchronized;
-            } else {
+            } catch (\Throwable) {
                 ++$failed;
             }
         }

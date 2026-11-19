@@ -94,24 +94,29 @@ class CustomerOrderRepository extends ServiceEntityRepository
      */
     public function getAdminKpis(): array
     {
-        $totalOrders = $this->count([]);
-        $cancelledOrders = $this->count([
-            'status' => CustomerOrder::STATUS_CANCELLED,
-        ]);
-        $totalRevenue = $this->createQueryBuilder('customerOrder')
-            ->select('COALESCE(SUM(customerOrder.totalPrice), 0)')
-            ->andWhere('customerOrder.status != :cancelledStatus')
+        $result = $this->createQueryBuilder('customerOrder')
+            ->select('COUNT(customerOrder.id) AS totalOrders')
+            ->addSelect(
+                'SUM(CASE WHEN customerOrder.status = :cancelledStatus '
+                .'THEN 1 ELSE 0 END) AS cancelledOrders',
+            )
+            ->addSelect(
+                'COALESCE(SUM(CASE WHEN '
+                .'customerOrder.status != :cancelledStatus '
+                .'THEN customerOrder.totalPrice ELSE 0 END), 0) '
+                .'AS totalRevenue',
+            )
             ->setParameter(
                 'cancelledStatus',
                 CustomerOrder::STATUS_CANCELLED,
             )
             ->getQuery()
-            ->getSingleScalarResult();
+            ->getSingleResult();
 
         return [
-            'totalOrders' => $totalOrders,
-            'cancelledOrders' => $cancelledOrders,
-            'totalRevenue' => (string) $totalRevenue,
+            'totalOrders' => (int) $result['totalOrders'],
+            'cancelledOrders' => (int) $result['cancelledOrders'],
+            'totalRevenue' => (string) $result['totalRevenue'],
         ];
     }
 

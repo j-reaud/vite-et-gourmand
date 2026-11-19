@@ -3,15 +3,9 @@
 {% block title %}Tableau de bord | Vite &amp; Gourmand{% endblock %}
 
 {% block body %}
-    {% set statusLabels = {
-        pending: 'En attente',
-        confirmed: 'Acceptée',
-        preparing: 'En préparation',
-        ready: 'Prête',
-        out_for_delivery: 'En livraison',
-        delivered: 'Livrée',
-        cancelled: 'Annulée',
-    } %}
+    {% set statusLabels = constant(
+        'App\\Entity\\CustomerOrder::STATUS_LABELS'
+    ) %}
 
     <div class="admin-dashboard">
         <aside class="admin-dashboard-sidebar">

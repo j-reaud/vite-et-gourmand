@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
-use App\Service\AccountRegistrationRecorder;
+use App\Service\AccountRegistrationDispatcher;
 use App\Document\AccountRegistration;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,7 +23,7 @@ class RegistrationController extends AbstractController
         UserPasswordHasherInterface $userPasswordHasher,
         EntityManagerInterface $entityManager,
         MailerInterface $mailer,
-        AccountRegistrationRecorder $registrationRecorder,
+        AccountRegistrationDispatcher $registrationDispatcher,
     ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
@@ -39,7 +39,7 @@ class RegistrationController extends AbstractController
             $entityManager->persist($user);
             $entityManager->flush();
 
-            $registrationRecorder->record(
+            $registrationDispatcher->dispatch(
                 $user,
                 AccountRegistration::TYPE_CUSTOMER,
             );

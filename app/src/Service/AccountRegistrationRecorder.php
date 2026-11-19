@@ -3,59 +3,35 @@
 namespace App\Service;
 
 use App\Document\AccountRegistration;
-use App\Entity\User;
 use DateTimeImmutable;
 use Doctrine\ODM\MongoDB\DocumentManager;
-use Psr\Log\LoggerInterface;
+use MongoDB\BSON\UTCDateTime;
 
 final class AccountRegistrationRecorder
 {
     public function __construct(
         private readonly DocumentManager $documentManager,
-        private readonly LoggerInterface $logger,
     ) {
     }
 
-    public function record(User $user, string $accountType): bool
-    {
-        $userId = $user->getId();
-
-        if ($userId === null) {
-            throw new \LogicException(
-                'The user must be saved before recording analytics.',
+    public function record(
+        int $userId,
+        string $accountType,
+        ?DateTimeImmutable $registeredAt,
+    ): void {
+        new AccountRegistration($userId, $accountType, $registeredAt);
+        $this->documentManager
+            ->getDocumentCollection(AccountRegistration::class)
+            ->updateOne(
+                ['_id' => (string) $userId],
+                ['$setOnInsert' => [
+                    'userId' => $userId,
+                    'accountType' => $accountType,
+                    'registeredAt' => $registeredAt === null
+                        ? null
+                        : new UTCDateTime($registeredAt),
+                ]],
+                ['upsert' => true],
             );
-        }
-
-        try {
-            $existingRegistration = $this->documentManager
-                ->getRepository(AccountRegistration::class)
-                ->findOneBy(['userId' => $userId]);
-
-            if ($existingRegistration !== null) {
-                return true;
-            }
-
-            $registration = new AccountRegistration(
-                $userId,
-                $accountType,
-                new DateTimeImmutable(),
-            );
-
-            $this->documentManager->persist($registration);
-            $this->documentManager->flush();
-
-            return true;
-        } catch (\Throwable $exception) {
-            $this->logger->error(
-                'The account registration analytics could not be recorded.',
-                [
-                    'user_id' => $userId,
-                    'account_type' => $accountType,
-                    'exception' => $exception,
-                ],
-            );
-
-            return false;
-        }
     }
 }

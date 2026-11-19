@@ -3,15 +3,9 @@
 {% block title %}Historique des commandes | Vite &amp; Gourmand{% endblock %}
 
 {% block public_body %}
-    {% set statusLabels = {
-        pending: 'En attente',
-        confirmed: 'Acceptée',
-        preparing: 'En préparation',
-        ready: 'Prête',
-        out_for_delivery: 'En cours de livraison',
-        delivered: 'Livrée',
-        cancelled: 'Annulée'
-    } %}
+    {% set statusLabels = constant(
+        'App\\Entity\\CustomerOrder::STATUS_LABELS'
+    ) %}
 
     <main class="order-history">
         <div class="order-history__shell">

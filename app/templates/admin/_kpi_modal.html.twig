@@ -36,7 +36,7 @@
                                 ></span>
                             </div>
                             <abbr title="{{ label }}">
-                                {{ label|slice(0, 3) }}
+                                {{ kpi.shortLabels[loop.index0] }}
                             </abbr>
                         </div>
                     {% endfor %}

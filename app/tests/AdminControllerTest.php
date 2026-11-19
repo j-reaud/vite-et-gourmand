@@ -64,6 +64,12 @@ class AdminControllerTest extends WebTestCase
             ->setPassword('hashed-password');
 
         $this->entityManager->persist($administrator);
+        $employee = (new User())
+            ->setEmail('dashboard-employee@example.com')
+            ->setRoles(['ROLE_EMPLOYEE'])
+            ->setIsActive(true)
+            ->setPassword('hashed-password');
+        $this->entityManager->persist($employee);
         $this->entityManager->flush();
 
         $this->documentManager->persist(new AccountRegistration(
