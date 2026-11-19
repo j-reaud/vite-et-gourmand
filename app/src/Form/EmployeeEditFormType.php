@@ -60,16 +60,6 @@ class EmployeeEditFormType extends AbstractType
                     new Length(max: 20),
                 ],
             ])
-            ->add('employeeNumber', TextType::class, [
-                'label' => 'Numéro d’employé',
-                'empty_data' => '',
-                'constraints' => [
-                    new NotBlank(
-                        message: 'Veuillez saisir le numéro d’employé.'
-                    ),
-                    new Length(max: 50),
-                ],
-            ])
         ;
     }
 

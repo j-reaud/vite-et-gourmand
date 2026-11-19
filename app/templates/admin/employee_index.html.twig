@@ -29,12 +29,14 @@
             <div class="employee-list-heading">
                 <h2>Employés</h2>
 
-                <a
-                    href="{{ path('app_admin_employee_new') }}"
+                <button
+                    type="button"
                     class="admin-primary-button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#employee-create-modal"
                 >
                     Créer un compte
-                </a>
+                </button>
             </div>
 
             {% if employees is empty %}
@@ -173,9 +175,6 @@
                                                 {{ form_row(
                                                     employeeEditForms[employee.id].phone
                                                 ) }}
-                                                {{ form_row(
-                                                    employeeEditForms[employee.id].employeeNumber
-                                                ) }}
                                             </div>
 
                                             <div class="modal-footer">
@@ -205,6 +204,69 @@
                 </div>
             {% endif %}
         </section>
+
+        <div
+            class="modal fade employee-edit-modal"
+            id="employee-create-modal"
+            tabindex="-1"
+            aria-labelledby="employee-create-modal-title"
+            aria-hidden="true"
+            data-controller="employee-create-modal"
+            data-employee-create-modal-open-value="{{ openEmployeeCreateModal ? 'true' : 'false' }}"
+        >
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2
+                            class="modal-title fs-5"
+                            id="employee-create-modal-title"
+                        >
+                            Créer un compte employé
+                        </h2>
+
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Fermer"
+                        ></button>
+                    </div>
+
+                    {{ form_start(employeeForm, {
+                        attr: {
+                            class: 'employee-account-form'
+                        }
+                    }) }}
+                        <div class="modal-body">
+                            {{ form_errors(employeeForm) }}
+                            {{ form_row(employeeForm.firstName) }}
+                            {{ form_row(employeeForm.lastName) }}
+                            {{ form_row(employeeForm.phone) }}
+                            {{ form_row(employeeForm.email) }}
+                            {{ form_row(employeeForm.plainPassword.first) }}
+                            {{ form_row(employeeForm.plainPassword.second) }}
+                        </div>
+
+                        <div class="modal-footer">
+                            <button
+                                type="button"
+                                class="admin-logout"
+                                data-bs-dismiss="modal"
+                            >
+                                Annuler
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="admin-primary-button"
+                            >
+                                Créer le compte employé
+                            </button>
+                        </div>
+                    {{ form_end(employeeForm) }}
+                </div>
+            </div>
+        </div>
 
         <div class="admin-actions">
             <a href="{{ path('app_admin') }}" class="admin-logout">

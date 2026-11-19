@@ -51,9 +51,13 @@ class EmployeeAccountControllerTest extends WebTestCase
         $plainPassword = 'Employee1!Secure';
 
         $this->client->loginUser($this->administrator, 'admin');
-        $this->client->request('GET', '/admin/employees/new');
+        $this->client->request('GET', '/admin/employees');
 
         self::assertResponseIsSuccessful();
+        self::assertSelectorExists(
+            '[data-bs-target="#employee-create-modal"]',
+        );
+        self::assertSelectorExists('#employee-create-modal');
 
         $this->client->submitForm('Créer le compte employé', [
             'employee_account_form[firstName]' => 'Marie',
@@ -61,14 +65,13 @@ class EmployeeAccountControllerTest extends WebTestCase
             'employee_account_form[email]' =>
                 'employee@example.com',
             'employee_account_form[phone]' => '0612345678',
-            'employee_account_form[employeeNumber]' => 'EMP-001',
             'employee_account_form[plainPassword][first]' =>
                 $plainPassword,
             'employee_account_form[plainPassword][second]' =>
                 $plainPassword,
         ]);
 
-        self::assertResponseRedirects('/admin/employees/new');
+        self::assertResponseRedirects('/admin/employees');
         self::assertEmailCount(1);
 
         $email = self::getMailerMessage();
@@ -101,7 +104,10 @@ class EmployeeAccountControllerTest extends WebTestCase
         self::assertSame('Marie', $employee->getFirstName());
         self::assertSame('Martin', $employee->getLastName());
         self::assertSame('0612345678', $employee->getPhone());
-        self::assertSame('EMP-001', $employee->getEmployeeNumber());
+        self::assertMatchesRegularExpression(
+            '/^VG-EMP-\d{6}$/',
+            (string) $employee->getEmployeeNumber(),
+        );
         self::assertContains('ROLE_EMPLOYEE', $employee->getRoles());
         self::assertNotContains('ROLE_ADMIN', $employee->getRoles());
         self::assertTrue($employee->isActive());
@@ -136,7 +142,7 @@ class EmployeeAccountControllerTest extends WebTestCase
         $this->entityManager->flush();
 
         $this->client->loginUser($customer, 'admin');
-        $this->client->request('GET', '/admin/employees/new');
+        $this->client->request('GET', '/admin/employees');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -153,7 +159,7 @@ class EmployeeAccountControllerTest extends WebTestCase
         $this->entityManager->flush();
 
         $this->client->loginUser($employee, 'admin');
-        $this->client->request('GET', '/admin/employees/new');
+        $this->client->request('GET', '/admin/employees');
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -170,7 +176,7 @@ class EmployeeAccountControllerTest extends WebTestCase
         $this->entityManager->flush();
 
         $this->client->loginUser($this->administrator, 'admin');
-        $this->client->request('GET', '/admin/employees/new');
+        $this->client->request('GET', '/admin/employees');
 
         $this->client->submitForm('Créer le compte employé', [
             'employee_account_form[firstName]' => 'Marie',
@@ -178,7 +184,6 @@ class EmployeeAccountControllerTest extends WebTestCase
             'employee_account_form[email]' =>
                 'employee@example.com',
             'employee_account_form[phone]' => '0612345678',
-            'employee_account_form[employeeNumber]' => 'EMP-002',
             'employee_account_form[plainPassword][first]' =>
                 'Employee1!Secure',
             'employee_account_form[plainPassword][second]' =>
@@ -191,20 +196,23 @@ class EmployeeAccountControllerTest extends WebTestCase
             '.invalid-feedback',
             'Un compte utilise déjà cette adresse e-mail.'
         );
+        self::assertSelectorExists(
+            '#employee-create-modal'
+            .'[data-employee-create-modal-open-value="true"]',
+        );
         self::assertCount(2, $this->userRepository->findAll());
     }
 
     public function testEmptyEmployeeFieldsReturnValidationErrors(): void
     {
         $this->client->loginUser($this->administrator, 'admin');
-        $this->client->request('GET', '/admin/employees/new');
+        $this->client->request('GET', '/admin/employees');
 
         $this->client->submitForm('Créer le compte employé', [
             'employee_account_form[firstName]' => '',
             'employee_account_form[lastName]' => '',
             'employee_account_form[email]' => '',
             'employee_account_form[phone]' => '',
-            'employee_account_form[employeeNumber]' => '',
             'employee_account_form[plainPassword][first]' =>
                 'Employee1!Secure',
             'employee_account_form[plainPassword][second]' =>
@@ -213,6 +221,10 @@ class EmployeeAccountControllerTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorExists('.invalid-feedback');
+        self::assertSelectorExists(
+            '#employee-create-modal'
+            .'[data-employee-create-modal-open-value="true"]',
+        );
         self::assertEmailCount(0);
         self::assertCount(1, $this->userRepository->findAll());
     }

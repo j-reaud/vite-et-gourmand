@@ -29,47 +29,77 @@ final class AdminController extends AbstractController
     }
 
     #[Route(
-        '/admin/employees/new',
-        name: 'app_admin_employee_new'
+        '/admin/employees',
+        name: 'app_admin_employee_index',
+        methods: ['GET', 'POST'],
     )]
-    public function createEmployee(
+    public function employees(
         Request $request,
+        UserRepository $userRepository,
+        FormFactoryInterface $formFactory,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         MailerInterface $mailer,
         LoggerInterface $logger,
     ): Response {
-        $employee = new User();
-        $form = $this->createForm(
+        $newEmployee = new User();
+        $employeeForm = $this->createForm(
             EmployeeAccountFormType::class,
-            $employee
+            $newEmployee,
+            [
+                'action' => $this->generateUrl(
+                    'app_admin_employee_index',
+                ),
+                'method' => 'POST',
+            ],
         );
-        $form->handleRequest($request);
+        $employeeForm->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($employeeForm->isSubmitted() && $employeeForm->isValid()) {
             /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
+            $plainPassword = $employeeForm
+                ->get('plainPassword')
+                ->getData();
 
-            $employee
+            $newEmployee
                 ->setRoles(['ROLE_EMPLOYEE'])
                 ->setIsActive(true)
                 ->setPassword(
                     $passwordHasher->hashPassword(
-                        $employee,
-                        $plainPassword
-                    )
+                        $newEmployee,
+                        $plainPassword,
+                    ),
                 );
 
-            $entityManager->persist($employee);
-            $entityManager->flush();
+            $entityManager->wrapInTransaction(
+                function (
+                    EntityManagerInterface $manager,
+                ) use ($newEmployee): void {
+                    $manager->persist($newEmployee);
+                    $manager->flush();
+
+                    $employeeId = $newEmployee->getId();
+
+                    if ($employeeId === null) {
+                        throw new \LogicException(
+                            'The employee identifier could not be generated.',
+                        );
+                    }
+
+                    $newEmployee->setEmployeeNumber(sprintf(
+                        'VG-EMP-%06d',
+                        $employeeId,
+                    ));
+                },
+            );
 
             $email = (new TemplatedEmail())
                 ->from('no-reply@vite-et-gourmand.fr')
-                ->to((string) $employee->getEmail())
+                ->to((string) $newEmployee->getEmail())
                 ->subject('Votre compte employé Vite & Gourmand')
                 ->htmlTemplate('emails/employee_account_created.html.twig')
                 ->context([
-                    'employee' => $employee,
+                    'employee' => $newEmployee,
                 ]);
 
             try {
@@ -78,39 +108,26 @@ final class AdminController extends AbstractController
                 $logger->error(
                     'Employee account notification email could not be sent.',
                     [
-                        'employee_email' => $employee->getEmail(),
+                        'employee_email' => $newEmployee->getEmail(),
                         'exception' => $exception,
-                    ]
+                    ],
                 );
 
                 $this->addFlash(
                     'warning',
-                    'Le compte employé a été créé, mais l’e-mail de notification n’a pas pu être envoyé.'
+                    'Le compte employé a été créé, mais l’e-mail '
+                    .'de notification n’a pas pu être envoyé.',
                 );
             }
 
             $this->addFlash(
                 'success',
-                'Le compte employé a été créé avec succès.'
+                'Le compte employé a été créé avec succès.',
             );
 
-            return $this->redirectToRoute('app_admin_employee_new');
+            return $this->redirectToRoute('app_admin_employee_index');
         }
 
-        return $this->render('admin/employee_new.html.twig', [
-            'employeeForm' => $form,
-        ]);
-    }
-
-    #[Route(
-        '/admin/employees',
-        name: 'app_admin_employee_index',
-        methods: ['GET'],
-    )]
-    public function employees(
-        UserRepository $userRepository,
-        FormFactoryInterface $formFactory,
-    ): Response {
         $employees = $userRepository->findEmployees();
         $employeeEditForms = [];
 
@@ -132,7 +149,13 @@ final class AdminController extends AbstractController
         return $this->render('admin/employee_index.html.twig', [
             'employees' => $employees,
             'employeeEditForms' => $employeeEditForms,
-        ]);
+            'employeeForm' => $employeeForm->createView(),
+            'openEmployeeCreateModal' => $employeeForm->isSubmitted(),
+        ], new Response(
+            status: $employeeForm->isSubmitted()
+                ? Response::HTTP_UNPROCESSABLE_ENTITY
+                : Response::HTTP_OK,
+        ));
     }
 
     #[Route(
