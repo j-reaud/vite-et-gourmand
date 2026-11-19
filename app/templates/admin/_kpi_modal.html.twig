@@ -1,0 +1,57 @@
+<div
+    class="modal fade admin-kpi-modal"
+    id="{{ modalId }}"
+    tabindex="-1"
+    aria-labelledby="{{ modalId }}Label"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <p class="admin-eyebrow">Statistiques mensuelles</p>
+                    <h2 class="modal-title" id="{{ modalId }}Label">
+                        {{ title }}
+                    </h2>
+                    <p>{{ description }}</p>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div
+                    class="admin-kpi-chart"
+                    role="img"
+                    aria-label="{{ description }}"
+                >
+                    {% for label in kpi.labels %}
+                        {% set value = kpi.values[loop.index0] %}
+                        {% set height = ((value / kpi.maximum) * 100)|round %}
+
+                        <div class="admin-kpi-chart-column">
+                            <span class="admin-kpi-chart-value">{{ value }}</span>
+                            <div class="admin-kpi-chart-track" aria-hidden="true">
+                                <span
+                                    class="admin-kpi-chart-bar"
+                                    style="height: {{ max(height, 3) }}%"
+                                ></span>
+                            </div>
+                            <abbr title="{{ label }}">
+                                {{ label|slice(0, 3) }}
+                            </abbr>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-start">
+                <button
+                    type="button"
+                    class="admin-logout"
+                    data-bs-dismiss="modal"
+                >
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

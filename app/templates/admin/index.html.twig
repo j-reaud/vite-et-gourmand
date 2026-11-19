@@ -1,49 +1,219 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Espace administrateur{% endblock %}
+{% block title %}Tableau de bord | Vite &amp; Gourmand{% endblock %}
 
 {% block body %}
-    <main class="admin-page">
-        <header class="admin-header">
-            <p class="admin-eyebrow">Administration</p>
-            <h1>Espace administrateur</h1>
-            <p>
-                Gérez les comptes et les activités de Vite &amp; Gourmand
-                depuis cet espace sécurisé.
-            </p>
-        </header>
+    {% set statusLabels = {
+        pending: 'En attente',
+        confirmed: 'Acceptée',
+        preparing: 'En préparation',
+        ready: 'Prête',
+        out_for_delivery: 'En livraison',
+        delivered: 'Livrée',
+        cancelled: 'Annulée',
+    } %}
 
-        <section class="admin-card">
-            <div>
-                <p class="admin-card-label">Compte connecté</p>
+    <div class="admin-dashboard">
+        <aside class="admin-dashboard-sidebar">
+            <a href="{{ path('app_admin') }}" class="admin-dashboard-brand">
+                <span>V&amp;G</span>
+                <strong>Vite &amp;<br>Gourmand</strong>
+            </a>
 
-                <h2>{{ app.user.email }}</h2>
+            <p class="admin-dashboard-nav-label">Administration</p>
+            <nav aria-label="Navigation administrateur">
+                <a href="{{ path('app_admin') }}" class="is-active">
+                    Tableau de bord
+                </a>
+                <span aria-disabled="true">Commandes</span>
+                <a href="{{ path('app_menu') }}">Menus</a>
+                <a href="{{ path('app_admin_employee_index') }}">
+                    Utilisateurs
+                </a>
+            </nav>
+
+            <div class="admin-dashboard-user">
+                <strong>
+                    {{ app.user.firstName ?: 'Administrateur' }}
+                    {{ app.user.lastName }}
+                </strong>
+                <span>{{ app.user.email }}</span>
+                <a href="{{ path('app_admin_logout') }}">Se déconnecter</a>
             </div>
+        </aside>
 
-            <dl class="admin-account-details">
+        <main class="admin-dashboard-main">
+            <header class="admin-dashboard-header">
                 <div>
-                    <dt>Rôle</dt>
-                    <dd>Administrateur</dd>
+                    <p class="admin-eyebrow">{{ today|date('d/m/Y') }}</p>
+                    <h1>
+                        Bonjour,
+                        {{ app.user.firstName ?: 'Administrateur' }}
+                    </h1>
+                    <p>Voici l’activité récente de Vite &amp; Gourmand.</p>
                 </div>
 
-                <div>
-                    <dt>Statut</dt>
-                    <dd class="admin-status">Actif</dd>
+                <div class="admin-dashboard-header-actions">
+                    <a
+                        href="{{ path('app_admin_employee_index') }}"
+                        class="admin-dashboard-button admin-dashboard-button--outline"
+                    >
+                        Gérer les employés
+                    </a>
+                    <a
+                        href="{{ path('app_menu') }}"
+                        class="admin-dashboard-button"
+                    >
+                        Voir les menus
+                    </a>
                 </div>
-            </dl>
-        </section>
+            </header>
 
-        <div class="admin-actions">
-            <a
-                href="{{ path('app_admin_employee_index') }}"
-                class="admin-primary-button"
-            >
-                Gérer les comptes employés
-            </a>
+            <section class="admin-dashboard-kpis" aria-label="Indicateurs clés">
+                <article class="admin-dashboard-kpi">
+                    <span>Chiffre d’affaires</span>
+                    <strong>
+                        {{ orderKpis.totalRevenue|number_format(2, ',', ' ') }} €
+                    </strong>
+                    <small>Hors commandes annulées</small>
+                </article>
 
-            <a href="{{ path('app_admin_logout') }}" class="admin-logout">
-                Se déconnecter
-            </a>
-        </div>
-    </main>
+                <article class="admin-dashboard-kpi">
+                    <span>Commandes</span>
+                    <strong>{{ orderKpis.totalOrders }}</strong>
+                    <small>Toutes périodes confondues</small>
+                </article>
+
+                <article class="admin-dashboard-kpi">
+                    <span>Commandes annulées</span>
+                    <strong>{{ orderKpis.cancelledOrders }}</strong>
+                    <small>Non comptabilisées dans le revenu</small>
+                </article>
+
+                <button
+                    type="button"
+                    class="admin-dashboard-kpi"
+                    data-bs-toggle="modal"
+                    data-bs-target="#customerKpiModal"
+                >
+                    <span>Clients</span>
+                    <strong>{{ accountKpis.customers.total }}</strong>
+                    <small>Voir l’évolution mensuelle</small>
+                </button>
+
+                <button
+                    type="button"
+                    class="admin-dashboard-kpi"
+                    data-bs-toggle="modal"
+                    data-bs-target="#employeeKpiModal"
+                >
+                    <span>Employés</span>
+                    <strong>{{ accountKpis.employees.total }}</strong>
+                    <small>Voir l’évolution mensuelle</small>
+                </button>
+            </section>
+
+            <section class="admin-dashboard-panel admin-dashboard-accounts">
+                <div>
+                    <p class="admin-eyebrow">Comptes utilisateurs</p>
+                    <h2>Évolution mensuelle</h2>
+                    <p>
+                        Consultez l’évolution des inscriptions clients et des
+                        créations de comptes employés.
+                    </p>
+                </div>
+
+                <div class="admin-dashboard-account-actions">
+                    <button
+                        type="button"
+                        class="admin-dashboard-button admin-dashboard-button--outline"
+                        data-bs-toggle="modal"
+                        data-bs-target="#customerKpiModal"
+                    >
+                        Graphique clients
+                    </button>
+                    <button
+                        type="button"
+                        class="admin-dashboard-button admin-dashboard-button--outline"
+                        data-bs-toggle="modal"
+                        data-bs-target="#employeeKpiModal"
+                    >
+                        Graphique employés
+                    </button>
+                </div>
+            </section>
+
+            <section class="admin-dashboard-panel">
+                <div class="admin-dashboard-panel-heading">
+                    <div>
+                        <p class="admin-eyebrow">Activité récente</p>
+                        <h2>Commandes récentes</h2>
+                    </div>
+                </div>
+
+                {% if recentOrders is empty %}
+                    <p class="admin-dashboard-empty">
+                        Aucune commande n’a encore été enregistrée.
+                    </p>
+                {% else %}
+                    <div class="admin-dashboard-table-wrapper">
+                        <table class="admin-dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Commande</th>
+                                    <th>Client</th>
+                                    <th>Menu</th>
+                                    <th>Total</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recentOrders %}
+                                    <tr>
+                                        <td>
+                                            <strong>
+                                                CMD-{{ '%06d'|format(order.id) }}
+                                            </strong>
+                                            <small>
+                                                {{ order.orderedAt|date('d/m/Y') }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ order.customer.firstName }}
+                                            {{ order.customer.lastName }}
+                                        </td>
+                                        <td>{{ order.menuName }}</td>
+                                        <td>
+                                            <strong>
+                                                {{ order.totalPrice|number_format(2, ',', ' ') }} €
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <span class="admin-order-status admin-order-status--{{ order.status }}">
+                                                {{ statusLabels[order.status] ?? order.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+
+    {% include 'admin/_kpi_modal.html.twig' with {
+        modalId: 'customerKpiModal',
+        title: 'Évolution des clients',
+        description: 'Nombre de nouveaux comptes clients par mois.',
+        kpi: accountKpis.customers,
+    } only %}
+
+    {% include 'admin/_kpi_modal.html.twig' with {
+        modalId: 'employeeKpiModal',
+        title: 'Évolution des employés',
+        description: 'Nombre de nouveaux comptes employés par mois.',
+        kpi: accountKpis.employees,
+    } only %}
 {% endblock %}

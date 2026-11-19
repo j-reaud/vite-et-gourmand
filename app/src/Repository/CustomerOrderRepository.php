@@ -84,4 +84,49 @@ class CustomerOrderRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @return array{
+     *     totalOrders: int,
+     *     cancelledOrders: int,
+     *     totalRevenue: string
+     * }
+     */
+    public function getAdminKpis(): array
+    {
+        $totalOrders = $this->count([]);
+        $cancelledOrders = $this->count([
+            'status' => CustomerOrder::STATUS_CANCELLED,
+        ]);
+        $totalRevenue = $this->createQueryBuilder('customerOrder')
+            ->select('COALESCE(SUM(customerOrder.totalPrice), 0)')
+            ->andWhere('customerOrder.status != :cancelledStatus')
+            ->setParameter(
+                'cancelledStatus',
+                CustomerOrder::STATUS_CANCELLED,
+            )
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return [
+            'totalOrders' => $totalOrders,
+            'cancelledOrders' => $cancelledOrders,
+            'totalRevenue' => (string) $totalRevenue,
+        ];
+    }
+
+    /**
+     * @return list<CustomerOrder>
+     */
+    public function findRecentForAdmin(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('customerOrder')
+            ->addSelect('customer')
+            ->join('customerOrder.customer', 'customer')
+            ->orderBy('customerOrder.orderedAt', 'DESC')
+            ->addOrderBy('customerOrder.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
