@@ -14,7 +14,7 @@
                 </p>
                 <div class="button-group">
                     <a class="button button--primary" href="{{ path('app_menu') }}">Découvrir nos menus <span aria-hidden="true">→</span></a>
-                    <a class="button button--outline" href="#contact">Nous contacter</a>
+                    <a class="button button--outline" href="{{ path('app_contact') }}">Nous contacter</a>
                 </div>
                 <p class="home-hero__trust">
                     <span class="icon-disc"><img src="{{ asset('icons/home/badge-check.svg') }}" alt=""></span>
@@ -156,7 +156,7 @@
                     <li><span>03</span><h3>Nous cuisinons</h3><p>Notre équipe prépare votre repas avec soin.</p></li>
                     <li><span>04</span><h3>Savourez</h3><p>Profitez pleinement de votre moment gourmand.</p></li>
                 </ol>
-                <div class="process__action"><a class="button button--primary" href="#contact">Parler de votre projet</a></div>
+                <div class="process__action"><a class="button button--primary" href="{{ path('app_contact') }}">Parler de votre projet</a></div>
             </div>
         </section>
 
@@ -221,7 +221,7 @@
                     <h2 id="contact-title">Faisons de votre prochain repas un souvenir gourmand</h2>
                     <p>Racontez-nous votre projet. Nous vous répondons sous 24 à 48 h avec une proposition claire et savoureuse.</p>
                     <div class="button-group">
-                        <a class="button button--light" href="mailto:bonjour@viteetgourmand.fr">Demander un devis</a>
+                        <a class="button button--light" href="{{ path('app_contact') }}">Demander un devis</a>
                         <a class="button button--light-outline" href="tel:+33556002525">04 56 00 25 25</a>
                     </div>
                 </div>

@@ -1,0 +1,68 @@
+{% apply inline_css(source('@styles/emails/account.css')) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle demande de contact</title>
+</head>
+<body class="email-body">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-background">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-shell">
+                    <tr>
+                        <td class="email-header">
+                            <span class="email-brand">Vite &amp; Gourmand</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-content">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr><td class="email-eyebrow">Formulaire de contact</td></tr>
+                                <tr><td class="email-title">Nouvelle demande reçue</td></tr>
+                                <tr>
+                                    <td class="email-text">
+                                        {{ contact.firstName }} {{ contact.lastName }} vous a envoyé un message depuis le site.
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-details">
+                                <tr><td colspan="2" class="email-section-title">Coordonnées</td></tr>
+                                <tr>
+                                    <td class="email-detail-label">Nom</td>
+                                    <td class="email-detail-value">{{ contact.firstName }} {{ contact.lastName }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">E-mail</td>
+                                    <td class="email-detail-value">{{ contact.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="email-detail-label">Téléphone</td>
+                                    <td class="email-detail-value">{{ contact.phone }}</td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-notice">
+                                <tr>
+                                    <td>
+                                        <strong>Message</strong><br>
+                                        {{ contact.message|nl2br }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-footer">
+                            Vous pouvez répondre directement à cet e-mail pour contacter le visiteur.
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+{% endapply %}
