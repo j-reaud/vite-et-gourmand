@@ -45,19 +45,6 @@ class EmployeeAccountFormType extends AbstractType
                     new Length(max: 100),
                 ],
             ])
-            ->add('email', EmailType::class, [
-                'label' => 'Adresse e-mail',
-                'empty_data' => '',
-                'attr' => ['autocomplete' => 'email'],
-                'constraints' => [
-                    new NotBlank(
-                        message: 'Veuillez saisir une adresse e-mail.'
-                    ),
-                    new Email(
-                        message: 'Veuillez saisir une adresse e-mail valide.'
-                    ),
-                ],
-            ])
             ->add('phone', TelType::class, [
                 'label' => 'Numéro de téléphone',
                 'empty_data' => '',
@@ -69,14 +56,17 @@ class EmployeeAccountFormType extends AbstractType
                     new Length(max: 20),
                 ],
             ])
-            ->add('employeeNumber', TextType::class, [
-                'label' => 'Numéro d’employé',
+            ->add('email', EmailType::class, [
+                'label' => 'Adresse e-mail',
                 'empty_data' => '',
+                'attr' => ['autocomplete' => 'email'],
                 'constraints' => [
                     new NotBlank(
-                        message: 'Veuillez saisir le numéro d’employé.'
+                        message: 'Veuillez saisir une adresse e-mail.'
                     ),
-                    new Length(max: 50),
+                    new Email(
+                        message: 'Veuillez saisir une adresse e-mail valide.'
+                    ),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
