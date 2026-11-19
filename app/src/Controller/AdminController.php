@@ -2,10 +2,14 @@
 
 namespace App\Controller;
 
+use App\Document\AccountRegistration;
 use App\Entity\User;
 use App\Form\EmployeeAccountFormType;
 use App\Form\EmployeeEditFormType;
+use App\Repository\CustomerOrderRepository;
 use App\Repository\UserRepository;
+use App\Service\AccountKpiService;
+use App\Service\AccountRegistrationDispatcher;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -23,9 +27,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     #[Route('/admin', name: 'app_admin')]
-    public function index(): Response
-    {
-        return $this->render('admin/index.html.twig');
+    public function index(
+        AccountKpiService $accountKpiService,
+        CustomerOrderRepository $customerOrderRepository,
+    ): Response {
+        return $this->render('admin/index.html.twig', [
+            'accountKpis' => $accountKpiService->getDashboardData(),
+            'orderKpis' => $customerOrderRepository->getAdminKpis(),
+            'recentOrders' => $customerOrderRepository->findRecentForAdmin(),
+            'today' => new \DateTimeImmutable(),
+        ]);
     }
 
     #[Route(
@@ -41,6 +52,7 @@ final class AdminController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         MailerInterface $mailer,
         LoggerInterface $logger,
+        AccountRegistrationDispatcher $registrationDispatcher,
     ): Response {
         $newEmployee = new User();
         $employeeForm = $this->createForm(
@@ -91,6 +103,11 @@ final class AdminController extends AbstractController
                         $employeeId,
                     ));
                 },
+            );
+
+            $registrationDispatcher->dispatch(
+                $newEmployee,
+                AccountRegistration::TYPE_EMPLOYEE,
             );
 
             $email = (new TemplatedEmail())

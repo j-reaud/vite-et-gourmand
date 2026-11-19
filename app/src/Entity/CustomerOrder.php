@@ -31,6 +31,16 @@ class CustomerOrder
         self::STATUS_CANCELLED,
     ];
 
+    public const STATUS_LABELS = [
+        self::STATUS_PENDING => 'En attente',
+        self::STATUS_CONFIRMED => 'Acceptée',
+        self::STATUS_PREPARING => 'En préparation',
+        self::STATUS_READY => 'Prête',
+        self::STATUS_OUT_FOR_DELIVERY => 'En cours de livraison',
+        self::STATUS_DELIVERED => 'Livrée',
+        self::STATUS_CANCELLED => 'Annulée',
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

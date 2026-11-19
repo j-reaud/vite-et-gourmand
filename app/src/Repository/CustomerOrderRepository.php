@@ -84,4 +84,54 @@ class CustomerOrderRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @return array{
+     *     totalOrders: int,
+     *     cancelledOrders: int,
+     *     totalRevenue: string
+     * }
+     */
+    public function getAdminKpis(): array
+    {
+        $result = $this->createQueryBuilder('customerOrder')
+            ->select('COUNT(customerOrder.id) AS totalOrders')
+            ->addSelect(
+                'SUM(CASE WHEN customerOrder.status = :cancelledStatus '
+                .'THEN 1 ELSE 0 END) AS cancelledOrders',
+            )
+            ->addSelect(
+                'COALESCE(SUM(CASE WHEN '
+                .'customerOrder.status != :cancelledStatus '
+                .'THEN customerOrder.totalPrice ELSE 0 END), 0) '
+                .'AS totalRevenue',
+            )
+            ->setParameter(
+                'cancelledStatus',
+                CustomerOrder::STATUS_CANCELLED,
+            )
+            ->getQuery()
+            ->getSingleResult();
+
+        return [
+            'totalOrders' => (int) $result['totalOrders'],
+            'cancelledOrders' => (int) $result['cancelledOrders'],
+            'totalRevenue' => (string) $result['totalRevenue'],
+        ];
+    }
+
+    /**
+     * @return list<CustomerOrder>
+     */
+    public function findRecentForAdmin(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('customerOrder')
+            ->addSelect('customer')
+            ->join('customerOrder.customer', 'customer')
+            ->orderBy('customerOrder.orderedAt', 'DESC')
+            ->addOrderBy('customerOrder.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
