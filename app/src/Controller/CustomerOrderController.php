@@ -10,12 +10,15 @@ use App\Form\CustomerOrderEditFormType;
 use App\Form\OrderPlacementFormType;
 use App\Repository\CustomerOrderRepository;
 use App\Service\CustomerOrderPriceCalculator;
+use App\Service\OrderConfirmationMailer;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -162,6 +165,8 @@ final class CustomerOrderController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         CustomerOrderPriceCalculator $priceCalculator,
+        OrderConfirmationMailer $orderConfirmationMailer,
+        LoggerInterface $logger,
     ): Response {
         $customer = $this->getAuthenticatedCustomer();
 
@@ -240,11 +245,29 @@ final class CustomerOrderController extends AbstractController
         $entityManager->persist($order);
         $entityManager->flush();
 
+        try {
+            $orderConfirmationMailer->send($order);
+        } catch (TransportExceptionInterface $exception) {
+            $logger->error(
+                'The order confirmation email could not be sent.',
+                [
+                    'order_reference' => $order->getReference(),
+                    'customer_id' => $customer->getId(),
+                    'exception' => $exception,
+                ],
+            );
+
+            $this->addFlash(
+                'order_email_warning',
+                'Votre commande est enregistrée, mais l’e-mail de '
+                .'confirmation n’a pas pu être envoyé.',
+            );
+        }
+
         $this->addFlash(
             'order_success',
             'Votre commande a bien été transmise à nos équipes. '
-            .'Une fois votre commande confirmée, vous recevrez '
-            .'une confirmation dans votre espace client.',
+            .'Un e-mail récapitulatif vous a été envoyé.',
         );
 
         return $this->redirectToRoute('app_menu_show', [

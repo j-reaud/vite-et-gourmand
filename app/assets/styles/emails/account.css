@@ -60,6 +60,67 @@
     line-height: 1.6;
 }
 
+.email-details {
+    width: 100%;
+    margin-bottom: 24px;
+    border-collapse: collapse;
+    border: 1px solid #e5ded5;
+}
+
+.email-section-title {
+    padding: 14px 16px;
+    background-color: #fff8ee;
+    color: #292522;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+}
+
+.email-detail-label,
+.email-detail-value {
+    padding: 10px 16px;
+    border-top: 1px solid #e5ded5;
+    color: #746e68;
+    font-size: 14px;
+    line-height: 1.5;
+    vertical-align: top;
+}
+
+.email-detail-label {
+    width: 42%;
+    color: #292522;
+    font-weight: 600;
+}
+
+.email-detail-value {
+    text-align: right;
+}
+
+.email-total-row {
+    background-color: #fff8ee;
+}
+
+.email-total-row .email-detail-label,
+.email-total-row .email-detail-value {
+    color: #292522;
+    font-weight: 700;
+}
+
+.email-notice {
+    width: 100%;
+    margin-bottom: 24px;
+    border-collapse: collapse;
+    background-color: #fff3cd;
+    border: 1px solid #e5c76b;
+}
+
+.email-notice td {
+    padding: 16px;
+    color: #5f4a12;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
 .email-button-cell {
     background-color: #7a263a;
     text-align: center;
