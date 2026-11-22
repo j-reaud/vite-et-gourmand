@@ -129,7 +129,7 @@ final class OrderModificationControllerTest extends WebTestCase
                 'customer_order_edit_form' => [
                     'deliveryAddress' => '8 rue Sainte-Catherine, 33000 Bordeaux',
                     'deliveryAt' => $deliveryAt->format('Y-m-d\TH:i'),
-                    'numberOfPeople' => 8,
+                    'numberOfPeople' => 9,
                     '_token' => $token,
                 ],
             ],
@@ -145,10 +145,11 @@ final class OrderModificationControllerTest extends WebTestCase
             '8 rue Sainte-Catherine, 33000 Bordeaux',
             $updatedOrder->getDeliveryAddress(),
         );
-        self::assertSame(8, $updatedOrder->getNumberOfPeople());
-        self::assertSame('240.00', $updatedOrder->getMenuPrice());
+        self::assertSame(9, $updatedOrder->getNumberOfPeople());
+        self::assertSame('270.00', $updatedOrder->getMenuPrice());
+        self::assertSame('27.00', $updatedOrder->getDiscountAmount());
         self::assertSame('5.00', $updatedOrder->getDeliveryCharge());
-        self::assertSame('245.00', $updatedOrder->getTotalPrice());
+        self::assertSame('248.00', $updatedOrder->getTotalPrice());
     }
 
     // Verifies that a customer cannot edit another customer's order.

@@ -8,6 +8,8 @@
         data-controller="order-placement"
         data-order-placement-base-price-value="{{ menu.price }}"
         data-order-placement-minimum-people-value="{{ menu.minimumPeople }}"
+        data-order-placement-discount-extra-people-value="{{ constant('App\\Service\\CustomerOrderPriceCalculator::DISCOUNT_EXTRA_PEOPLE') }}"
+        data-order-placement-discount-rate-value="{{ constant('App\\Service\\CustomerOrderPriceCalculator::DISCOUNT_RATE_PERCENT') }}"
         data-order-placement-open-value="{{ openOrderModal ? 'true' : 'false' }}"
         data-order-placement-open-recap-value="{{ orderForm.numberOfPeople.vars.errors|length > 0 ? 'true' : 'false' }}"
         data-order-placement-quote-url-value="{{ path(
@@ -199,7 +201,11 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    {{ form_row(orderForm.discountAmount) }}
+                                    {{ form_row(orderForm.discountAmount, {
+                                        attr: {
+                                            'data-order-placement-target': 'discountInput'
+                                        }
+                                    }) }}
                                 </div>
                             </div>
 
@@ -223,7 +229,12 @@
                                         </dd>
 
                                         <dt class="col-7">Réduction</dt>
-                                        <dd class="col-5 text-end">0,00 €</dd>
+                                        <dd
+                                            class="col-5 text-end"
+                                            data-order-placement-target="discount"
+                                        >
+                                            0,00 €
+                                        </dd>
 
                                         <dt class="col-7">Distance de livraison</dt>
                                         <dd
