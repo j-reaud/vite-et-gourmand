@@ -153,6 +153,7 @@ final class CustomerOrderController extends AbstractController
             'distanceKm' => $priceQuote->getFormattedDistance(),
             'recognizedAddress' => $priceQuote->getRecognizedAddress(),
             'menuPrice' => $priceQuote->getFormattedMenuPrice(),
+            'discountAmount' => $priceQuote->getFormattedDiscount(),
             'deliveryCharge' => $priceQuote->getFormattedDeliveryFee(),
             'totalPrice' => $priceQuote->getFormattedTotal(),
         ]);
@@ -235,9 +236,7 @@ final class CustomerOrderController extends AbstractController
             );
         }
 
-        $order
-            ->setDiscountAmount('0.00')
-            ->setStatus(CustomerOrder::STATUS_PENDING);
+        $order->setStatus(CustomerOrder::STATUS_PENDING);
 
         $menu->setStock($menu->getStock() - 1);
 

@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\CustomerOrder;
 use App\Entity\User;
+use App\Service\CustomerOrderPriceCalculator;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -92,6 +93,12 @@ final class OrderPlacementFormType extends AbstractType
                 'label' => 'Réduction',
                 'currency' => 'EUR',
                 'disabled' => true,
+                'help' => sprintf(
+                    '%d %% appliqués automatiquement à partir de %d personnes.',
+                    CustomerOrderPriceCalculator::DISCOUNT_RATE_PERCENT,
+                    $minimumPeople
+                        + CustomerOrderPriceCalculator::DISCOUNT_EXTRA_PEOPLE,
+                ),
             ])
         ;
     }

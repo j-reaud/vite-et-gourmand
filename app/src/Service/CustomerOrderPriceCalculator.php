@@ -7,6 +7,9 @@ use App\Entity\Menu;
 
 final class CustomerOrderPriceCalculator
 {
+    public const DISCOUNT_EXTRA_PEOPLE = 5;
+    public const DISCOUNT_RATE_PERCENT = 10;
+
     public function __construct(
         private readonly DeliveryCalculatorInterface $deliveryCalculator,
     ) {
@@ -16,7 +19,6 @@ final class CustomerOrderPriceCalculator
         Menu $menu,
         int $numberOfPeople,
         string $deliveryAddress,
-        string $discountAmount = '0.00',
         ?string $agreedMenuPrice = null,
         ?int $agreedNumberOfPeople = null,
     ): CustomerOrderPriceQuote {
@@ -55,7 +57,12 @@ final class CustomerOrderPriceCalculator
             );
         }
 
-        $discountInCents = $this->amountToCents($discountAmount);
+        $discountInCents = $numberOfPeople
+            >= $minimumPeople + self::DISCOUNT_EXTRA_PEOPLE
+            ? (int) round(
+                $menuPriceInCents * self::DISCOUNT_RATE_PERCENT / 100,
+            )
+            : 0;
 
         return new CustomerOrderPriceQuote(
             menuPriceInCents: $menuPriceInCents,
@@ -83,13 +90,13 @@ final class CustomerOrderPriceCalculator
             menu: $menu,
             numberOfPeople: $numberOfPeople,
             deliveryAddress: (string) $order->getDeliveryAddress(),
-            discountAmount: $order->getDiscountAmount() ?? '0.00',
             agreedMenuPrice: $agreedMenuPrice,
             agreedNumberOfPeople: $agreedNumberOfPeople,
         );
 
         $order
             ->setMenuPrice($quote->getFormattedMenuPrice())
+            ->setDiscountAmount($quote->getFormattedDiscount())
             ->setDeliveryDistanceKm($quote->getFormattedDistance())
             ->setDeliveryCharge($quote->getFormattedDeliveryFee())
             ->setTotalPrice($quote->getFormattedTotal());

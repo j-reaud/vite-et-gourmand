@@ -14,6 +14,8 @@ export default class extends Controller {
         'recognizedAddress',
         'recapDelivery',
         'subtotal',
+        'discount',
+        'discountInput',
         'deliveryDistance',
         'deliveryCharge',
         'total',
@@ -23,6 +25,8 @@ export default class extends Controller {
     static values = {
         basePrice: Number,
         minimumPeople: Number,
+        discountExtraPeople: Number,
+        discountRate: Number,
         open: Boolean,
         openRecap: Boolean,
         quoteUrl: String,
@@ -91,10 +95,16 @@ export default class extends Controller {
 
         const unitPrice = this.basePriceValue / this.minimumPeopleValue;
         const menuTotal = unitPrice * people;
-        const finalTotal = menuTotal + this.deliveryFeeValue;
+        const discount = people
+            >= this.minimumPeopleValue + this.discountExtraPeopleValue
+            ? menuTotal * this.discountRateValue / 100
+            : 0;
+        const finalTotal = menuTotal - discount + this.deliveryFeeValue;
 
         this.recapPeopleTarget.textContent = people.toString();
         this.subtotalTarget.textContent = this.formatCurrency(menuTotal);
+        this.discountTarget.textContent = this.formatCurrency(discount);
+        this.discountInputTarget.value = discount.toFixed(2);
         this.totalTarget.textContent = this.formatCurrency(finalTotal);
     }
 
@@ -135,12 +145,14 @@ export default class extends Controller {
         const distance = Number.parseFloat(quote.distanceKm);
         const deliveryFee = Number.parseFloat(quote.deliveryCharge);
         const menuPrice = Number.parseFloat(quote.menuPrice);
+        const discount = Number.parseFloat(quote.discountAmount);
         const totalPrice = Number.parseFloat(quote.totalPrice);
 
         if (
             !Number.isFinite(distance)
             || !Number.isFinite(deliveryFee)
             || !Number.isFinite(menuPrice)
+            || !Number.isFinite(discount)
             || !Number.isFinite(totalPrice)
             || typeof quote.recognizedAddress !== 'string'
             || quote.recognizedAddress.trim() === ''
@@ -157,6 +169,8 @@ export default class extends Controller {
             deliveryFee,
         );
         this.subtotalTarget.textContent = this.formatCurrency(menuPrice);
+        this.discountTarget.textContent = this.formatCurrency(discount);
+        this.discountInputTarget.value = discount.toFixed(2);
         this.totalTarget.textContent = this.formatCurrency(totalPrice);
     }
 

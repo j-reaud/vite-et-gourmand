@@ -181,8 +181,88 @@ final class OrderPlacementControllerTest extends WebTestCase
             $data['recognizedAddress'],
         );
         self::assertSame('180.00', $data['menuPrice']);
+        self::assertSame('0.00', $data['discountAmount']);
         self::assertSame('5.00', $data['deliveryCharge']);
         self::assertSame('185.00', $data['totalPrice']);
+    }
+
+    // Verifies that five guests above the minimum trigger a 10% discount.
+    public function testDeliveryQuoteAppliesAutomaticDiscountAtThreshold(): void
+    {
+        $this->client->loginUser($this->customer);
+        $crawler = $this->client->request(
+            'GET',
+            '/menus/menu-de-commande',
+        );
+
+        $modal = $crawler->filter('#orderPlacementModal');
+
+        $this->client->request(
+            'POST',
+            (string) $modal->attr(
+                'data-order-placement-quote-url-value',
+            ),
+            [
+                '_token' => $modal->attr(
+                    'data-order-placement-quote-token-value',
+                ),
+                'deliveryAddress' => '1 Place Pey Berland, 33000 Bordeaux',
+                'numberOfPeople' => 9,
+            ],
+        );
+
+        self::assertResponseIsSuccessful();
+
+        $data = json_decode(
+            (string) $this->client->getResponse()->getContent(),
+            true,
+            flags: JSON_THROW_ON_ERROR,
+        );
+
+        self::assertSame('270.00', $data['menuPrice']);
+        self::assertSame('27.00', $data['discountAmount']);
+        self::assertSame('5.00', $data['deliveryCharge']);
+        self::assertSame('248.00', $data['totalPrice']);
+    }
+
+    // Verifies that the automatic discount is persisted on the order.
+    public function testOrderPersistsAutomaticDiscountAtThreshold(): void
+    {
+        $this->client->loginUser($this->customer);
+        $crawler = $this->client->request(
+            'GET',
+            '/menus/menu-de-commande',
+        );
+
+        $csrfToken = $crawler
+            ->filter('input[name="order_placement_form[_token]"]')
+            ->attr('value');
+
+        $this->client->request(
+            'POST',
+            '/profile/orders/new/menu-de-commande',
+            [
+                'order_placement_form' => [
+                    'deliveryAddress' => '10 rue de la Paix, 33000 Bordeaux',
+                    'deliveryAt' => (new \DateTimeImmutable('+3 days'))
+                        ->format('Y-m-d\TH:i'),
+                    'numberOfPeople' => 9,
+                    '_token' => $csrfToken,
+                ],
+            ],
+        );
+
+        self::assertResponseRedirects('/menus/menu-de-commande');
+
+        $order = $this->orderRepository->findOneBy([
+            'customer' => $this->customer,
+        ]);
+
+        self::assertInstanceOf(CustomerOrder::class, $order);
+        self::assertSame('270.00', $order->getMenuPrice());
+        self::assertSame('27.00', $order->getDiscountAmount());
+        self::assertSame('5.00', $order->getDeliveryCharge());
+        self::assertSame('248.00', $order->getTotalPrice());
     }
 
     // Verifies order creation, server-side pricing, and stock reduction.

@@ -142,6 +142,7 @@ final class EmployeeOrderController extends AbstractController
             'deliveryAt' => $order->getDeliveryAt()?->format(DATE_ATOM),
             'numberOfPeople' => $order->getNumberOfPeople(),
             'menuPrice' => $order->getMenuPrice(),
+            'discountAmount' => $order->getDiscountAmount(),
             'deliveryCharge' => $order->getDeliveryCharge(),
             'deliveryDistanceKm' => $order->getDeliveryDistanceKm(),
             'totalPrice' => $order->getTotalPrice(),

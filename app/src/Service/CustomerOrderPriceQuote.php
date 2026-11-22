@@ -21,6 +21,11 @@ final readonly class CustomerOrderPriceQuote
         return $this->deliveryQuote->getFormattedDeliveryFee();
     }
 
+    public function getFormattedDiscount(): string
+    {
+        return $this->formatAmount($this->discountInCents);
+    }
+
     public function getFormattedDistance(): string
     {
         return $this->deliveryQuote->getFormattedDistance();
