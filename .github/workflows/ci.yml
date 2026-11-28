@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Lint & tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      COMPOSE_FILE: compose.yaml:compose.ci.yaml
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Throwaway credentials, only used by the CI containers.
+      # The "runner" context isn't allowed in job-level env, so the cache
+      # path is exported from a step (RUNNER_TEMP exists at step time).
+      - name: Create .env for Docker Compose
+        run: |
+          cp .env.example .env
+          echo "COMPOSER_CACHE_HOST=$RUNNER_TEMP/composer-cache" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build PHP image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/php/Dockerfile
+          tags: vite-et-gourmand-php:ci
+          load: true
+          cache-from: type=gha,scope=php
+          cache-to: type=gha,mode=max,scope=php
+
+      - name: Cache Composer downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/composer-cache
+          key: composer-${{ hashFiles('app/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Start containers
+        run: docker compose up -d --no-build --wait php mysql mongodb
+
+      - name: Validate composer.json
+        run: docker compose exec -T php composer validate --no-check-publish
+
+      - name: Install dependencies
+        run: docker compose exec -T php composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Audit Composer dependencies
+        run: docker compose exec -T php composer audit
+
+      - name: Lint container
+        run: docker compose exec -T php php bin/console lint:container
+
+      - name: Lint YAML
+        run: docker compose exec -T php php bin/console lint:yaml config --parse-tags
+
+      - name: Lint Twig
+        run: docker compose exec -T php php bin/console lint:twig templates
+
+      - name: Create test database
+        run: docker compose exec -T php php bin/console doctrine:database:create --if-not-exists
+
+      - name: Run migrations
+        run: docker compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+      - name: Validate Doctrine mapping
+        run: docker compose exec -T php php bin/console doctrine:schema:validate
+
+      - name: PHPUnit
+        run: docker compose exec -T php php bin/phpunit
+
+      - name: Show container logs
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v
