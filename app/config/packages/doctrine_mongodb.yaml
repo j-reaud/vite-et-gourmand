@@ -4,7 +4,9 @@ doctrine_mongodb:
     connections:
         default:
             server: '%env(MONGODB_URI)%'
-            options: {}
+            options:
+                connectTimeoutMS: 2000
+                socketTimeoutMS: 2000
     default_database: '%env(MONGODB_DB)%'
     document_managers:
         default:

@@ -1,0 +1,31 @@
+# Version control
+.git
+.gitignore
+
+# Secrets: never send to the build context
+.env
+app/.env.local
+app/.env.local.php
+app/.env.*.local
+app/config/secrets/prod/prod.decrypt.private.php
+
+# Dependencies (installed inside the container)
+app/vendor
+**/node_modules
+
+# Generated / runtime files
+app/var
+app/.phpunit.cache
+app/phpunit.xml
+app/public/bundles
+app/public/assets
+app/assets/vendor
+
+# OS / editor files
+**/.DS_Store
+.idea
+.vscode
+
+# Local docs and notes
+project_description.md
+tobe-fix.md

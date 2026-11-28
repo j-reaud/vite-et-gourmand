@@ -1,0 +1,31 @@
+# CI-only overrides, merged on top of compose.yaml:
+#   COMPOSE_FILE=compose.yaml:compose.ci.yaml docker compose up -d php mysql mongodb
+# Local development keeps using compose.yaml alone.
+
+services:
+  php:
+    # Image built (with layer cache) by the "Build PHP image" step of the workflow.
+    image: vite-et-gourmand-php:ci
+    environment:
+      APP_ENV: test
+      # Root is used so Doctrine can create the "<db>_test" database
+      # (the MySQL image only grants MYSQL_USER rights on MYSQL_DATABASE).
+      DATABASE_URL: "mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/${MYSQL_DATABASE}?serverVersion=8.4&charset=utf8mb4"
+      # The app reads MONGODB_URI / MONGODB_DB (see config/packages/doctrine_mongodb.yaml).
+      MONGODB_URI: "mongodb://${MONGODB_ROOT_USERNAME}:${MONGODB_ROOT_PASSWORD}@mongodb:27017/?authSource=admin&serverSelectionTimeoutMS=5000"
+      MONGODB_DB: ${MONGODB_DATABASE}
+      # No Mailpit in CI: the null transport still lets tests assert on sent emails.
+      MAILER_DSN: "null://null"
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+    volumes:
+      - ${COMPOSER_CACHE_HOST:-./.composer-cache}:/tmp/composer-cache
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  mongodb:
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion administrateur{% endblock %}
+
+{% block body %}
+    <main class="auth-page admin-login-page">
+        <section class="auth-card admin-login-card">
+            <div class="auth-brand">Vite &amp; Gourmand</div>
+
+            <div class="auth-heading">
+                <p class="auth-eyebrow">Espace sécurisé</p>
+                <h1>Administration</h1>
+                <p>
+                    Connectez-vous avec votre compte administrateur
+                    pour accéder aux outils de gestion.
+                </p>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            <div class="auth-form-wrapper">
+                <form
+                    method="post"
+                    action="{{ path('app_admin_login') }}"
+                    class="auth-form"
+                >
+                    <div class="mb-3">
+                        <label for="admin-username" class="form-label">
+                            Adresse e-mail
+                        </label>
+                        <input
+                            type="email"
+                            value="{{ last_username }}"
+                            name="_username"
+                            id="admin-username"
+                            class="form-control"
+                            autocomplete="email"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="admin-password" class="form-label">
+                            Mot de passe
+                        </label>
+                        <input
+                            type="password"
+                            name="_password"
+                            id="admin-password"
+                            class="form-control"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+
+                    <input
+                        type="hidden"
+                        name="_csrf_token"
+                        value="{{ csrf_token('authenticate') }}"
+                    >
+                    <button class="btn auth-submit w-100" type="submit">
+                        Accéder à l’administration
+                    </button>
+                </form>
+
+                <p class="auth-footer">
+                    <a href="{{ path('app_forgot_password_request') }}">
+                        Mot de passe oublié ?
+                    </a>
+                </p>
+                <p class="auth-footer">
+                    <a href="{{ path('app_login') }}">
+                        Retour à l’espace client
+                    </a>
+                </p>
+            </div>
+        </section>
+    </main>
+{% endblock %}

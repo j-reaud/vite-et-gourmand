@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Commandes clients | Vite &amp; Gourmand{% endblock %}
+
+{% block body %}
+    {% set status_labels = constant(
+        'App\\Entity\\CustomerOrder::STATUS_LABELS'
+    ) %}
+
+    <main class="admin-page">
+        <header class="admin-header">
+            <p class="admin-eyebrow">Espace employé</p>
+            <h1>Commandes clients</h1>
+            <p>
+                Consultez les commandes et modifiez celles qui nécessitent
+                une intervention après avoir contacté le client.
+            </p>
+        </header>
+
+        {% for message in app.flashes('employee_order_edit_success') %}
+            <div class="alert alert-success" role="status">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        {% for message in app.flashes('employee_order_edit_unavailable') %}
+            <div class="alert alert-warning" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+
+        <section class="admin-card d-block">
+            {% if orders is empty %}
+                <p class="mb-0">Aucune commande n’est disponible.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Référence</th>
+                                <th scope="col">Client</th>
+                                <th scope="col">Menu</th>
+                                <th scope="col">Livraison</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <th scope="row">{{ order.reference }}</th>
+                                    <td>
+                                        {{ order.customer.firstName }}
+                                        {{ order.customer.lastName }}
+                                        <span class="d-block text-secondary">
+                                            {{ order.customer.email }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.menuName }}</td>
+                                    <td>
+                                        {{ order.deliveryAt|date('d/m/Y à H\\hi') }}
+                                    </td>
+                                    <td>
+                                        {{ status_labels[order.status] ?? order.status }}
+                                    </td>
+                                    <td>
+                                        {% if order.employeeEditable %}
+                                            <a
+                                                class="btn btn-outline-primary"
+                                                href="{{ path('app_employee_order_edit', {id: order.id}) }}"
+                                            >
+                                                Modifier
+                                            </a>
+                                        {% else %}
+                                            <span class="text-secondary">
+                                                Modification indisponible
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </section>
+
+        <div class="admin-actions">
+            <a href="{{ path('app_logout') }}" class="admin-logout">
+                Se déconnecter
+            </a>
+        </div>
+    </main>
+{% endblock %}

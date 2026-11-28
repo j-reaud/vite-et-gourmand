@@ -1,0 +1,96 @@
+{% set statusDescriptions = {
+    pending: 'Votre commande a été enregistrée.',
+    confirmed: 'Votre commande a été acceptée par nos équipes.',
+    preparing: 'La préparation de votre commande a commencé.',
+    ready: 'Votre commande est prête.',
+    out_for_delivery: 'Votre commande est en cours de livraison.',
+    delivered: 'Votre commande a été livrée.',
+    cancelled: 'Votre commande a été annulée.'
+} %}
+
+<div class="order-tracking__layout">
+    <section class="order-tracking__card" aria-labelledby="order-tracking-title">
+        <h2 id="order-tracking-title">Suivi de la commande</h2>
+        <p>Consultez les différentes étapes de traitement de votre commande.</p>
+
+        <ol class="order-tracking__timeline">
+            {% for historyEntry in order.orderStatusHistories %}
+                <li class="order-tracking__item">
+                    <span
+                        class="order-tracking__marker order-tracking__marker--{{ historyEntry.status }}"
+                        aria-hidden="true"
+                    >
+                        {{ historyEntry.status == 'cancelled' ? '×' : '✓' }}
+                    </span>
+
+                    <div class="order-tracking__event">
+                        <div>
+                            <strong>
+                                {{ statusLabels[historyEntry.status]|default(historyEntry.status) }}
+                            </strong>
+                            <p>
+                                {{ statusDescriptions[historyEntry.status]|default('Le statut de votre commande a été mis à jour.') }}
+                            </p>
+                        </div>
+
+                        <time datetime="{{ historyEntry.changedAt|date('c') }}">
+                            {{ historyEntry.changedAt|date('d/m/Y · H\\hi') }}
+                        </time>
+                    </div>
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <aside class="order-tracking__summary" aria-labelledby="order-summary-title">
+        <h2 id="order-summary-title">Commande {{ order.reference }}</h2>
+
+        <span class="order-status order-status--{{ order.status }}">
+            {{ statusLabels[order.status]|default(order.status) }}
+        </span>
+
+        <dl>
+            <div>
+                <dt>Menu</dt>
+                <dd>{{ order.menuName }}</dd>
+            </div>
+            <div>
+                <dt>Livraison initialement prévue</dt>
+                <dd>{{ order.deliveryAt|date('d/m/Y à H\\hi') }}</dd>
+            </div>
+            <div>
+                <dt>Total</dt>
+                <dd>{{ order.totalPrice|number_format(2, ',', ' ') }} €</dd>
+            </div>
+        </dl>
+
+        <a href="{{ path('app_contact') }}">
+            Contacter le service client
+        </a>
+    </aside>
+</div>
+
+{% if order.status == 'out_for_delivery' %}
+    <aside class="order-tracking__notice" role="status">
+        <h3>Livraison en cours</h3>
+        <p>Votre commande est en route vers l’adresse de livraison indiquée.</p>
+    </aside>
+{% elseif order.status == 'delivered' %}
+    <aside class="order-tracking__notice order-tracking__notice--success" role="status">
+        <h3>Commande livrée</h3>
+        <p>Votre commande a bien été livrée.</p>
+    </aside>
+{% endif %}
+
+<div class="order-detail__actions">
+    <a class="order-detail__back" href="{{ path('app_customer_order_index') }}">
+        ← Retour à mes commandes
+    </a>
+
+    <a
+        class="order-detail__back"
+        href="{{ path('app_customer_order_show', {id: order.id}) }}"
+    >
+        Voir les détails
+    </a>
+</div>

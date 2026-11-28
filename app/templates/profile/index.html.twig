@@ -1,0 +1,116 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block public_body %}
+    <main class="profile-page">
+        <div class="profile-layout">
+            <nav class="profile-breadcrumb" aria-label="Fil d’Ariane">
+                <span>Accueil</span>
+                <span aria-hidden="true">/</span>
+                <span>Mon compte</span>
+                <span aria-hidden="true">/</span>
+                <strong>Mon profil</strong>
+            </nav>
+
+            <header class="profile-welcome">
+                <p class="profile-eyebrow">Votre espace gourmand</p>
+                <h1>Bonjour {{ app.user.firstName }}, ravis de vous retrouver.</h1>
+                <p>Gérez vos informations personnelles et la sécurité de votre compte.</p>
+            </header>
+
+            <div class="profile-content">
+                {{ include('profile/_sidebar.html.twig', {activeSection: 'profile'}) }}
+
+                <section class="profile-main">
+                    <header class="profile-section-heading">
+                        <h2>Mon profil</h2>
+                        <p>Consultez et modifiez les informations associées à votre compte.</p>
+                    </header>
+
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success" role="status">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+
+                    {{ form_start(profileForm, {
+                        attr: {
+                            class: 'profile-form',
+                            'data-controller': 'profile-editor',
+                            'data-profile-editor-editing-value': profileForm.vars.submitted and not profileForm.vars.valid ? 'true' : 'false'
+                        }
+                    }) }}
+                        {{ form_errors(profileForm) }}
+                        {% set addressHasErrors = profileForm.address.vars.errors|length > 0 %}
+
+                        <nav class="profile-tabs nav" role="tablist" aria-label="Sections du profil">
+                            <button class="profile-tab{{ addressHasErrors ? '' : ' active' }}" id="profile-information-tab" data-profile-editor-target="tab" data-bs-toggle="tab" data-bs-target="#profile-information" type="button" role="tab" aria-controls="profile-information" aria-selected="{{ addressHasErrors ? 'false' : 'true' }}">
+                                Informations
+                            </button>
+                            <button class="profile-tab{{ addressHasErrors ? ' active' : '' }}" id="profile-address-tab" data-profile-editor-target="tab" data-bs-toggle="tab" data-bs-target="#profile-address" type="button" role="tab" aria-controls="profile-address" aria-selected="{{ addressHasErrors ? 'true' : 'false' }}">
+                                Adresse
+                            </button>
+                            <button class="profile-tab" id="profile-security-tab" data-profile-editor-target="tab" data-bs-toggle="tab" data-bs-target="#profile-security" type="button" role="tab" aria-controls="profile-security" aria-selected="false">
+                                Sécurité
+                            </button>
+                        </nav>
+
+                        <div class="tab-content profile-tab-content">
+                            <section class="tab-pane fade{{ addressHasErrors ? '' : ' show active' }} profile-panel" id="profile-information" data-profile-editor-target="panel" role="tabpanel" aria-labelledby="profile-information-tab" tabindex="0">
+                                <div class="profile-panel-heading">
+                                    <div>
+                                        <h3>Mes informations personnelles</h3>
+                                        <p>Ces informations permettent de vous identifier et de vous contacter.</p>
+                                    </div>
+                                    <button type="button" class="profile-edit" data-profile-editor-target="editButton" data-action="profile-editor#edit">Modifier</button>
+                                </div>
+
+                                <div class="profile-fields profile-fields-two-columns">
+                                    {{ form_row(profileForm.firstName, {attr: {readonly: true, 'data-profile-editor-target': 'input'}}) }}
+                                    {{ form_row(profileForm.lastName, {attr: {readonly: true, 'data-profile-editor-target': 'input'}}) }}
+                                    {{ form_row(profileForm.email, {attr: {readonly: true, 'data-profile-editor-target': 'input'}}) }}
+                                    {{ form_row(profileForm.phone, {attr: {readonly: true, 'data-profile-editor-target': 'input'}}) }}
+                                </div>
+                            </section>
+
+                            <section class="tab-pane fade{{ addressHasErrors ? ' show active' : '' }} profile-panel" id="profile-address" data-profile-editor-target="panel" role="tabpanel" aria-labelledby="profile-address-tab" tabindex="0">
+                                <div class="profile-panel-heading">
+                                    <div>
+                                        <h3>Mon adresse de livraison</h3>
+                                        <p>Cette adresse sera utilisée pour vos prochaines commandes.</p>
+                                    </div>
+                                    <button type="button" class="profile-edit" data-profile-editor-target="editButton" data-action="profile-editor#edit">Modifier</button>
+                                </div>
+
+                                <div class="profile-fields">
+                                    {{ form_row(profileForm.address, {attr: {readonly: true, 'data-profile-editor-target': 'input'}}) }}
+                                </div>
+                            </section>
+
+                            <section class="tab-pane fade profile-panel" id="profile-security" role="tabpanel" aria-labelledby="profile-security-tab" tabindex="0">
+                                <div class="profile-panel-heading">
+                                    <h3>Sécurité du compte</h3>
+                                    <p>Votre mot de passe n’est jamais affiché sur cette page.</p>
+                                </div>
+
+                                <div class="profile-security-row">
+                                    <div>
+                                        <strong>Mot de passe</strong>
+                                        <span aria-label="Mot de passe masqué">••••••••••••</span>
+                                    </div>
+                                    <a class="profile-security-link" href="{{ path('app_forgot_password_request') }}">Modifier</a>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="profile-actions" data-profile-editor-target="actions" hidden>
+                            <button type="submit" class="profile-submit">Enregistrer les modifications</button>
+                            <button type="button" class="profile-cancel" data-action="profile-editor#cancel">Annuler</button>
+                        </div>
+                    {{ form_end(profileForm) }}
+                </section>
+            </div>
+        </div>
+    </main>
+{% endblock %}

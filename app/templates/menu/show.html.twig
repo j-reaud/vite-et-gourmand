@@ -1,0 +1,43 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}{{ menu.title }} | Vite &amp; Gourmand{% endblock %}
+
+{% block public_body %}
+    <main class="menu-detail">
+        <div class="catalogue-shell menu-detail__layout">
+            <img src="{{ asset(menu.imagePath) }}" width="1200" height="896" alt="{{ menu.title }}">
+            <div>
+                <a class="menu-detail__back" href="{{ path('app_menu') }}">← Retour aux menus</a>
+                <div class="catalogue-card__badges"><span>{{ menu.theme }}</span><span>{{ menu.diet }}</span></div>
+                <h1>{{ menu.title }}</h1>
+                <p>{{ menu.description }}</p>
+                <strong class="menu-detail__price">{{ menu.price|number_format(0, ',', ' ') }} € pour {{ menu.minimumPeople }} personnes</strong>
+                {% if menu.stock > 0 %}
+                    <p class="menu-detail__availability">Disponible · {{ menu.stock }}</p>
+                {% else %}
+                    <p class="menu-detail__availability menu-detail__availability--empty">Ce menu est actuellement indisponible.</p>
+                {% endif %}
+                {% if menu.stock > 0 %}
+                    {% if orderForm %}
+                        <button
+                            type="button"
+                            class="btn catalogue-card__button w-100 mt-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#orderPlacementModal"
+                        >
+                            Commander
+                        </button>
+                    {% elseif not app.user %}
+                        <a
+                            class="btn catalogue-card__button w-100 mt-3"
+                            href="{{ path('app_login') }}"
+                        >
+                            Commander
+                        </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    {{ include('menu/_order_modal.html.twig') }}
+{% endblock %}

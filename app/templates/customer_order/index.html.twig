@@ -1,0 +1,260 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}Historique des commandes | Vite &amp; Gourmand{% endblock %}
+
+{% block public_body %}
+    {% set statusLabels = constant(
+        'App\\Entity\\CustomerOrder::STATUS_LABELS'
+    ) %}
+
+    <main class="order-history">
+        <div class="order-history__shell">
+            <nav class="order-history__breadcrumb" aria-label="Fil d’Ariane">
+                <a href="{{ path('app_home') }}">Accueil</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ path('app_profile') }}">Mon compte</a>
+                <span aria-hidden="true">/</span>
+                <strong>Historique des commandes</strong>
+            </nav>
+
+            <section class="order-history__intro" aria-labelledby="order-history-title">
+                <div>
+                    <p class="order-history__eyebrow">Espace client</p>
+                    <h1 id="order-history-title">Historique des commandes</h1>
+                    <p>
+                        Retrouvez vos commandes passées et à venir, consultez leur détail
+                        ou recommandez un menu en quelques clics.
+                    </p>
+                </div>
+
+                <a class="order-history__primary-action" href="{{ path('app_menu') }}">
+                    Commander un nouveau menu
+                </a>
+            </section>
+
+            <section class="order-summary" aria-label="Synthèse des commandes">
+                <article>
+                    <span>Commandes au total</span>
+                    <strong>{{ totalOrders }}</strong>
+                    <small>Depuis votre inscription</small>
+                </article>
+
+                <article>
+                    <span>Commande à venir</span>
+                    <strong>{{ upcomingOrder ? '1' : '0' }}</strong>
+                    <small>
+                        {% if upcomingOrder %}
+                            Prochaine prestation le {{ upcomingOrder.deliveryAt|date('d/m/Y') }}
+                        {% else %}
+                            Aucune prestation planifiée
+                        {% endif %}
+                    </small>
+                </article>
+
+                <article>
+                    <span>Total commandé</span>
+                    <strong>{{ totalOrdered|number_format(2, ',', ' ') }} €</strong>
+                    <small>Toutes commandes confondues</small>
+                </article>
+            </section>
+
+            <form
+                class="order-filters"
+                method="get"
+                action="{{ path('app_customer_order_index') }}"
+                data-controller="order-filters"
+                data-turbo-frame="order-results"
+                data-turbo-action="advance"
+            >
+                <label>
+                    <span>Rechercher une commande</span>
+                    <input
+                        type="search"
+                        name="search"
+                        value="{{ filters.search }}"
+                        placeholder="N° de commande ou nom du menu"
+                        data-action="input->order-filters#scheduleSubmit"
+                    >
+                </label>
+
+                <label>
+                    <span>Statut</span>
+                    <select
+                        name="status"
+                        data-action="change->order-filters#submit"
+                    >
+                        <option value="">Tous les statuts</option>
+                        {% for value, label in statusLabels %}
+                            <option
+                                value="{{ value }}"
+                                {{ filters.status == value ? 'selected' : '' }}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    <span>Période</span>
+                    <select
+                        name="period"
+                        data-action="change->order-filters#submit"
+                    >
+                        <option value="">Toutes les périodes</option>
+                        <option value="3" {{ filters.period == 3 ? 'selected' : '' }}>
+                            3 derniers mois
+                        </option>
+                        <option value="6" {{ filters.period == 6 ? 'selected' : '' }}>
+                            6 derniers mois
+                        </option>
+                        <option value="12" {{ filters.period == 12 ? 'selected' : '' }}>
+                            12 derniers mois
+                        </option>
+                    </select>
+                </label>
+
+                <button type="submit">Rechercher</button>
+                <a href="{{ path('app_customer_order_index') }}">Réinitialiser</a>
+            </form>
+
+            <turbo-frame id="order-results" target="_top">
+            <div class="order-history__list-heading">
+                <h2>Vos commandes</h2>
+                <span>{{ orders|length }} résultat{{ orders|length > 1 ? 's' : '' }}</span>
+            </div>
+
+            {% if orders is empty and totalOrders > 0 %}
+                <section class="orders-empty">
+                    <h2>Aucune commande ne correspond à ces filtres</h2>
+                    <p>Modifiez vos critères ou réinitialisez la recherche pour retrouver toutes vos commandes.</p>
+                    <a href="{{ path('app_customer_order_index') }}">Réinitialiser les filtres</a>
+                </section>
+            {% elseif orders is empty %}
+                <section class="orders-empty">
+                    <h2>Vous n’avez pas encore de commande</h2>
+                    <p>Découvrez nos menus de saison pour préparer votre prochain événement.</p>
+                    <a href="{{ path('app_menu') }}">Découvrir les menus</a>
+                </section>
+            {% else %}
+                <div class="order-table-wrapper">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Image</th>
+                                <th scope="col">Commande</th>
+                                <th scope="col">Menu</th>
+                                <th scope="col">Convives</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <img
+                                            src="{{ asset(order.menu.imagePath) }}"
+                                            width="76"
+                                            height="60"
+                                            loading="lazy"
+                                            alt=""
+                                        >
+                                    </td>
+                                    <td>
+                                        <strong>{{ order.reference }}</strong>
+                                        <time datetime="{{ order.orderedAt|date('c') }}">
+                                            {{ order.orderedAt|date('d/m/Y') }}
+                                        </time>
+                                    </td>
+                                    <td>{{ order.menuName }}</td>
+                                    <td>{{ order.numberOfPeople }} personnes</td>
+                                    <td><strong>{{ order.totalPrice|number_format(2, ',', ' ') }} €</strong></td>
+                                    <td>
+                                        <span class="order-status order-status--{{ order.status }}">
+                                            {{ statusLabels[order.status]|default(order.status) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_customer_order_show', {id: order.id}) }}">
+                                            Voir le détail <span aria-hidden="true">→</span>
+                                        </a>
+
+                                        {% if order.status == 'delivered' %}
+                                            <a class="order-table__reorder" href="{{ path('app_menu_show', {slug: order.menu.slug}) }}">
+                                                Commander à nouveau
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="order-mobile-list">
+                    {% for order in orders %}
+                        <article class="order-mobile-card">
+                            <header>
+                                <strong>{{ order.reference }}</strong>
+                                <span class="order-status order-status--{{ order.status }}">
+                                    {{ statusLabels[order.status]|default(order.status) }}
+                                </span>
+                            </header>
+
+                            <div class="order-mobile-card__menu">
+                                <img
+                                    src="{{ asset(order.menu.imagePath) }}"
+                                    width="74"
+                                    height="68"
+                                    loading="lazy"
+                                    alt=""
+                                >
+                                <div>
+                                    <h3>{{ order.menuName }}</h3>
+                                    <time datetime="{{ order.deliveryAt|date('c') }}">
+                                        Prestation le {{ order.deliveryAt|date('d/m/Y') }}
+                                    </time>
+                                </div>
+                            </div>
+
+                            <dl>
+                                <div>
+                                    <dt>Convives</dt>
+                                    <dd>{{ order.numberOfPeople }} personnes</dd>
+                                </div>
+                                <div>
+                                    <dt>Total</dt>
+                                    <dd>{{ order.totalPrice|number_format(2, ',', ' ') }} €</dd>
+                                </div>
+                            </dl>
+
+                            <a
+                                class="order-mobile-card__detail"
+                                href="{{ path('app_customer_order_show', {id: order.id}) }}"
+                            >
+                                Voir le détail de la commande
+                            </a>
+
+                            {% if order.status == 'delivered' %}
+                                <a class="order-mobile-card__reorder" href="{{ path('app_menu_show', {slug: order.menu.slug}) }}">
+                                    Commander à nouveau
+                                </a>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            </turbo-frame>
+
+            <aside class="order-help">
+                <div>
+                    <h2>Une question sur une commande ?</h2>
+                    <p>Notre équipe est disponible pour vous accompagner avant ou après votre prestation.</p>
+                </div>
+                <a href="{{ path('app_contact') }}">Contacter le service client</a>
+            </aside>
+        </div>
+    </main>
+{% endblock %}

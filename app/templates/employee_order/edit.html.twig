@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ order.reference }} | Vite &amp; Gourmand{% endblock %}
+
+{% block body %}
+    <main class="admin-page">
+        <header class="admin-header">
+            <p class="admin-eyebrow">Espace employé</p>
+            <h1>Modifier la commande</h1>
+            <p>
+                {{ order.reference }} · {{ order.menuName }} ·
+                {{ order.customer.firstName }} {{ order.customer.lastName }}
+            </p>
+        </header>
+
+        <section class="admin-card d-block">
+            <p class="alert alert-info">
+                Contactez le client avant toute modification. Le moyen de
+                contact et le motif seront conservés dans l’historique.
+            </p>
+
+            {{ form_start(editForm) }}
+                {{ form_errors(editForm) }}
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        {{ form_row(editForm.deliveryAddress) }}
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        {{ form_row(editForm.deliveryAt) }}
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        {{ form_row(editForm.numberOfPeople) }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form_row(editForm.contactConfirmed) }}
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        {{ form_row(editForm.contactMethod) }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form_row(editForm.reason) }}
+                    </div>
+                </div>
+
+                <div class="admin-actions mt-4">
+                    <a
+                        class="admin-logout"
+                        href="{{ path('app_employee_order_index') }}"
+                    >
+                        Annuler
+                    </a>
+
+                    <button class="admin-primary-button" type="submit">
+                        Enregistrer les modifications
+                    </button>
+                </div>
+            {{ form_end(editForm) }}
+        </section>
+    </main>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}Modifier {{ order.reference }} | Vite &amp; Gourmand{% endblock %}
+
+{% block public_body %}
+    <main class="order-history">
+        <div class="order-history__shell">
+            <nav class="order-history__breadcrumb" aria-label="Fil d’Ariane">
+                <a href="{{ path('app_home') }}">Accueil</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ path('app_customer_order_index') }}">Mes commandes</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ path('app_customer_order_show', {id: order.id}) }}">
+                    {{ order.reference }}
+                </a>
+                <span aria-hidden="true">/</span>
+                <strong>Modifier</strong>
+            </nav>
+
+            <section class="order-detail" aria-labelledby="order-edit-title">
+                <header class="order-detail__heading">
+                    <div>
+                        <p class="order-history__eyebrow">Commande en attente</p>
+                        <h1 id="order-edit-title">Modifier la commande</h1>
+                        <p>{{ order.reference }} · {{ order.menuName }}</p>
+                    </div>
+                </header>
+
+                {{ form_start(editForm, {
+                    attr: {
+                        class: 'order-detail__section'
+                    }
+                }) }}
+                    {{ form_errors(editForm) }}
+                    {{ form_row(editForm.deliveryAddress) }}
+                    {{ form_row(editForm.deliveryAt) }}
+                    {{ form_row(editForm.numberOfPeople) }}
+
+                    <div class="order-detail__actions mt-4">
+                        <a
+                            class="order-detail__back"
+                            href="{{ path('app_customer_order_show', {id: order.id}) }}"
+                        >
+                            Annuler
+                        </a>
+
+                        <button class="btn btn-primary" type="submit">
+                            Enregistrer les modifications
+                        </button>
+                    </div>
+                {{ form_end(editForm) }}
+            </section>
+        </div>
+    </main>
+{% endblock %}

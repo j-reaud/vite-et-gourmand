@@ -1,0 +1,3 @@
+services:
+    App\Service\DeliveryCalculatorInterface:
+        class: App\Tests\Double\FakeDeliveryCalculator

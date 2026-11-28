@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mot de passe oublié{% endblock %}
+
+{% block body %}
+    <main class="auth-page">
+        <section class="auth-card">
+            <div class="auth-brand">Vite &amp; Gourmand</div>
+
+            <div class="auth-heading">
+                <p class="auth-eyebrow">Espace client</p>
+                <h1>Mot de passe oublié</h1>
+                <p>
+                    Saisissez votre adresse e-mail pour recevoir un lien
+                    permettant de réinitialiser votre mot de passe.
+                </p>
+            </div>
+
+            {% for flash_error in app.flashes('reset_password_error') %}
+                <div class="alert alert-danger" role="alert">
+                    {{ flash_error }}
+                </div>
+            {% endfor %}
+
+            {{ form_start(requestForm, {
+                attr: {class: 'auth-form'}
+            }) }}
+                {{ form_row(requestForm.email) }}
+
+                <button class="btn auth-submit w-100" type="submit">
+                    Envoyer le lien
+                </button>
+            {{ form_end(requestForm) }}
+
+            <p class="auth-footer">
+                <a href="{{ path('app_login') }}">Retour à la connexion</a>
+            </p>
+        </section>
+    </main>
+{% endblock %}

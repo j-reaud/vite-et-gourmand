@@ -1,0 +1,117 @@
+{% extends 'public.html.twig' %}
+
+{% block title %}Nous contacter | Vite & Gourmand{% endblock %}
+
+{% block public_body %}
+    <main class="contact-page">
+        <section class="contact-hero" aria-labelledby="contact-page-title">
+            <div class="section-shell">
+                <p class="eyebrow">Parlons de votre projet</p>
+                <h1 id="contact-page-title">Nous contacter</h1>
+                <p>Une question, un événement à préparer ou une envie particulière ? Notre équipe vous répond sous 24 à 48 heures.</p>
+            </div>
+        </section>
+
+        <section class="contact-section section-shell">
+            <div class="contact-layout">
+                <aside class="contact-details" aria-labelledby="contact-details-title">
+                    <p class="eyebrow">À votre écoute</p>
+                    <h2 id="contact-details-title">Échangeons ensemble</h2>
+                    <p>Décrivez-nous votre besoin et nous vous accompagnerons avec une proposition adaptée.</p>
+
+                    <address>
+                        <div>
+                            <strong>Téléphone</strong>
+                            <a href="tel:+33556002525">04 56 00 25 25</a>
+                        </div>
+                        <div>
+                            <strong>Adresse e-mail</strong>
+                            <a href="mailto:bonjour@viteetgourmand.fr">bonjour@viteetgourmand.fr</a>
+                        </div>
+                        <div>
+                            <strong>Adresse</strong>
+                            <span>18 rue des Saveurs, 33000 Bordeaux</span>
+                        </div>
+                        <div>
+                            <strong>Horaires</strong>
+                            <span>Du lundi au dimanche · 9h–18h</span>
+                        </div>
+                    </address>
+                </aside>
+
+                <div class="contact-form-card">
+                    <h2>Envoyez-nous un message</h2>
+                    <p>Les champs marqués d’un astérisque sont obligatoires.</p>
+
+                    {{ form_start(contactForm, {attr: {class: 'contact-form'}}) }}
+                        {{ form_errors(contactForm) }}
+                        {{ form_row(contactForm.website) }}
+
+                        <div class="contact-form__row">
+                            {{ form_row(contactForm.firstName, {
+                                label: 'Prénom *',
+                                attr: {class: 'form-control'}
+                            }) }}
+                            {{ form_row(contactForm.lastName, {
+                                label: 'Nom *',
+                                attr: {class: 'form-control'}
+                            }) }}
+                        </div>
+
+                        <div class="contact-form__row">
+                            {{ form_row(contactForm.email, {
+                                label: 'Adresse e-mail *',
+                                attr: {class: 'form-control'}
+                            }) }}
+                            {{ form_row(contactForm.phone, {
+                                label: 'Téléphone *',
+                                attr: {class: 'form-control'}
+                            }) }}
+                        </div>
+
+                        {{ form_row(contactForm.subject, {
+                            label: 'Sujet *',
+                            attr: {class: 'form-control'}
+                        }) }}
+
+                        {{ form_row(contactForm.message, {
+                            label: 'Message *',
+                            attr: {class: 'form-control'}
+                        }) }}
+
+                        <button class="button button--primary contact-form__submit" type="submit">
+                            Envoyer <span aria-hidden="true">→</span>
+                        </button>
+                    {{ form_end(contactForm) }}
+                </div>
+            </div>
+        </section>
+    </main>
+
+    {% if app.flashes('contact_success') is not empty %}
+        <div
+            class="modal fade"
+            id="contactSuccessModal"
+            tabindex="-1"
+            aria-labelledby="contactSuccessModalLabel"
+            aria-hidden="true"
+            data-controller="contact-success"
+            data-turbo-temporary
+        >
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content contact-success-modal">
+                    <div class="modal-body text-center">
+                        <span class="contact-success-modal__icon" aria-hidden="true">✓</span>
+                        <h2 id="contactSuccessModalLabel">Message envoyé</h2>
+                        <p>Votre message a bien été transmis à notre équipe. Nous vous répondrons dans les meilleurs délais.</p>
+                        <a
+                            class="button button--primary"
+                            href="{{ path('app_home') }}"
+                            data-action="contact-success#closeBeforeNavigation"
+                        >OK</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

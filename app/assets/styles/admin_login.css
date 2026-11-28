@@ -1,0 +1,48 @@
+.admin-login-page {
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(
+            145deg,
+            var(--color-dark) 0%,
+            var(--color-dark) 42%,
+            var(--color-cream) 42%,
+            var(--color-cream) 100%
+        );
+}
+
+.admin-login-page::before {
+    position: absolute;
+    top: -6rem;
+    left: -6rem;
+    width: 15rem;
+    height: 15rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    content: "";
+}
+
+.admin-login-card {
+    position: relative;
+    border-top: 0.3rem solid var(--color-primary);
+}
+
+.admin-login-card .auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-login-card .auth-brand::before {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--color-primary);
+    content: "";
+}
+
+@media (min-width: 768px) {
+    .admin-login-card {
+        max-width: 30rem;
+    }
+}

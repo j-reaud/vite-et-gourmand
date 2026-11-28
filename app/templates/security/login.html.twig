@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %} 
+
+{% block title %} Se connecter {% endblock %}
+
+
+{% block body %}
+    <main class="auth-page">
+        <section class="auth-card">
+            <div class="auth-brand">Vite &amp; Gourmand</div>
+
+
+
+                <div class="auth-heading">
+                <p class="auth-eyebrow"> Espace client</p>
+                <h1>Se connecter</h1>
+                <p>Accédez à votre compte pour consulter et gérer vos commandes. </p>
+            </div>
+
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error.messageKey | trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            {% if app.user %}
+                <div class="alert alert-light">
+                    Vous êtes connecté en tant que {{ app.user.userIdentifier }}.
+                    <a href="{{ logout_path() }}"> Se déconnecter</a>
+                </div>
+            {% endif %}
+
+
+            <div class="auth-form-wrapper">
+                <form method="post" class="auth-form">
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Adresse e-mail</label>
+                        <input
+                            type="email"
+                            value="{{ last_username }}"
+                            name="_username"
+                            id="username"
+                            class="form-control"
+                            autocomplete="email"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Mot de passe</label>
+                        <input
+                            type="password"
+                            name="_password"
+                            id="password"
+                            class="form-control"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+
+                    <input
+                        type="hidden"
+                        name="_csrf_token"
+                        data-controller="csrf-protection"
+                        value="{{ csrf_token('authenticate') }}"
+                    >
+                    <button class="btn auth-submit w-100" type="submit">Se connecter</button>
+                </form>
+
+                <p class="auth-footer">
+
+                    <a href="{{ path('app_forgot_password_request') }}">Mot de passe oublié ?</a>
+                </p>
+                <p class="auth-footer">
+                    Vous n’avez pas de compte ?
+                    <a href="{{ path('app_register') }}">Inscrivez-vous ici</a>
+                </p>
+            </div>
+        </section>
+    </main>
+{% endblock %}

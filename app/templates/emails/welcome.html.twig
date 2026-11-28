@@ -1,0 +1,85 @@
+{% apply inline_css(source('@styles/emails/account.css')) %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenue chez Vite &amp; Gourmand</title>
+</head>
+
+<body class="email-body">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-background">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-shell">
+                    <tr>
+                        <td class="email-header">
+                            <span class="email-brand">Vite &amp; Gourmand</span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-content">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td class="email-eyebrow">Espace client</td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-title">
+                                        Bienvenue chez Vite &amp; Gourmand
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Bonjour {{ user.firstName }},
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Votre compte a bien été créé.
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td class="email-text">
+                                        Vous pouvez maintenant vous connecter et découvrir nos menus.
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td height="16"></td>
+                                </tr>
+
+                                <tr>
+                                    <td>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                            <tr>
+                                                <td class="email-button-cell">
+                                                    <a href="{{ url('app_login') }}" class="email-button">
+                                                        Se connecter
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="email-footer">
+                            À bientôt,<br>
+                            L’équipe Vite &amp; Gourmand
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+{% endapply %}
